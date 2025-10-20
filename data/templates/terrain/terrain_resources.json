@@ -1,0 +1,60 @@
+{
+  "terrain_types": [
+    "plains",
+    "mountains",
+    "forest",
+    "coastal",
+    "desert",
+    "hills"
+  ],
+  "resource_rules": {
+    "coastal": {
+      "fish": {
+        "min": 50.0,
+        "max": 100.0
+      },
+      "oil": {
+        "min": 0.0,
+        "max": 50.0
+      }
+    },
+    "mountains": {
+      "minerals": {
+        "min": 70.0,
+        "max": 100.0
+      },
+      "rare_earth": {
+        "min": 30.0,
+        "max": 60.0
+      }
+    },
+    "plains": {
+      "agriculture": {
+        "min": 80.0,
+        "max": 100.0
+      }
+    },
+    "forest": {
+      "timber": {
+        "min": 60.0,
+        "max": 90.0
+      }
+    },
+    "desert": {
+      "oil": {
+        "min": 50.0,
+        "max": 100.0
+      }
+    },
+    "hills": {
+      "agriculture": {
+        "min": 50.0,
+        "max": 70.0
+      },
+      "minerals": {
+        "min": 30.0,
+        "max": 60.0
+      }
+    }
+  }
+}

@@ -1,0 +1,353 @@
+{
+  "events": [
+    {
+      "id": "economic_crisis_tax",
+      "title": "Wirtschaftskrise: Steuerpolitik",
+      "description": "Die Wirtschaft stagniert. Arbeitslosigkeit steigt auf 15%.\n\nIhr Finanzminister empfiehlt dringend Maßnahmen. Verschiedene Berater schlagen unterschiedliche Ansätze vor.",
+      "type": "economic",
+      "options": [
+        {
+          "label": "Steuern senken (Marktlösung)",
+          "description": "Unternehmens- und Einkommenssteuern senken, um Investitionen anzukurbeln.",
+          "effects": {
+            "money": -500000,
+            "legitimacy": -5,
+            "nation_gdp_growth": 2.0,
+            "nation_unemployment": -3.0
+          },
+          "console_message": "Steuersenkungen beschlossen. Staatseinnahmen sinken kurzfristig, Wirtschaft soll angekurbelt werden."
+        },
+        {
+          "label": "Staatsausgaben erhöhen (Keynesianismus)",
+          "description": "Massive öffentliche Infrastrukturprogramme starten.",
+          "effects": {
+            "money": -2000000,
+            "legitimacy": 10,
+            "nation_gdp_growth": 3.5,
+            "nation_unemployment": -5.0,
+            "nation_debt": 1000000
+          },
+          "console_message": "Konjunkturprogramm gestartet. Große Infrastrukturprojekte schaffen Arbeitsplätze."
+        },
+        {
+          "label": "Sparpolitik (Austerität)",
+          "description": "Staatsausgaben kürzen, um Haushalt zu konsolidieren.",
+          "effects": {
+            "money": 1000000,
+            "legitimacy": -20,
+            "nation_gdp_growth": -1.5,
+            "nation_unemployment": 4.0
+          },
+          "console_message": "Sparmaßnahmen durchgesetzt. Bevölkerung protestiert, Staatsfinanzen verbessern sich."
+        },
+        {
+          "label": "Realitäts-Verzerrung: Wohlstand manifestieren",
+          "description": "Realitätspunkte nutzen, um wirtschaftlichen Wohlstand zu erzwingen.",
+          "effects": {
+            "money": 5000000,
+            "reality_points": -50,
+            "legitimacy": -30,
+            "nation_gdp_growth": 5.0,
+            "nation_unemployment": -10.0
+          },
+          "console_message": "REALITÄT MANIPULIERT. Plötzlicher Wohlstand erscheint... Bevölkerung ist verstört.",
+          "requires": {
+            "reality_points": 50
+          }
+        }
+      ]
+    },
+    {
+      "id": "diplomatic_crisis_border",
+      "title": "Diplomatische Krise: Grenzkonflikt",
+      "description": "Das Nordreich hat Truppen an unserer Grenze zusammengezogen!\n\nIhr Außenminister meldet: 'Sie fordern Zugang zu unseren Küstengewässern. Die Situation ist explosiv.'",
+      "type": "diplomatic",
+      "options": [
+        {
+          "label": "Verhandeln (Friedlich)",
+          "description": "Diplomatische Verhandlungen anbieten, Kompromiss suchen.",
+          "effects": {
+            "legitimacy": -5,
+            "relationship_nordreich": 15,
+            "nation_military_strength": -50
+          },
+          "console_message": "Friedensverhandlungen erfolgreich. Konzessionen gemacht, aber Krieg vermieden."
+        },
+        {
+          "label": "Zurückweisen (Fest)",
+          "description": "Forderungen ablehnen, militärische Bereitschaft signalisieren.",
+          "effects": {
+            "legitimacy": 10,
+            "relationship_nordreich": -25,
+            "nation_military_strength": 100
+          },
+          "console_message": "Harte Haltung eingenommen. Nordreich zieht Truppen zurück - vorerst. Spannungen bleiben."
+        },
+        {
+          "label": "Präventivschlag (Aggressiv)",
+          "description": "Überraschungsangriff auf Nordreich-Stellungen.",
+          "effects": {
+            "money": -3000000,
+            "legitimacy": -15,
+            "relationship_nordreich": -100,
+            "nation_military_strength": -200
+          },
+          "console_message": "KRIEG AUSGEBROCHEN! Präventivschlag gestartet. Internationale Isolation droht.",
+          "triggers_war": "nordreich"
+        },
+        {
+          "label": "Bündnis aktivieren (Diplomatisch)",
+          "description": "Südkonföderation um Unterstützung bitten.",
+          "effects": {
+            "legitimacy": 5,
+            "relationship_nordreich": -15,
+            "relationship_suedkonfoederation": 20
+          },
+          "console_message": "Südkonföderation signalisiert Unterstützung. Nordreich lenkt ein."
+        }
+      ]
+    },
+    {
+      "id": "internal_crisis_protests",
+      "title": "Massenproteste in der Hauptstadt",
+      "description": "Hunderttausende demonstrieren gegen die Regierung!\n\nForderungen: Höhere Löhne, bessere Arbeitsbedingungen, mehr Demokratie. Ihr Innenminister warnt vor Eskalation.",
+      "type": "internal",
+      "options": [
+        {
+          "label": "Zugeständnisse machen",
+          "description": "Lohnerhöhungen und Reformen zusagen.",
+          "effects": {
+            "money": -800000,
+            "legitimacy": 15,
+            "nation_gdp_growth": -0.5
+          },
+          "console_message": "Reformen angekündigt. Proteste enden friedlich. Bevölkerung zufriedener."
+        },
+        {
+          "label": "Ignorieren",
+          "description": "Proteste aussitzen, keine Zugeständnisse.",
+          "effects": {
+            "legitimacy": -10,
+            "province_unrest_all": 15.0
+          },
+          "console_message": "Proteste ignoriert. Unruhe breitet sich auf Provinzen aus."
+        },
+        {
+          "label": "Polizeigewalt einsetzen",
+          "description": "Proteste mit Gewalt auflösen.",
+          "effects": {
+            "legitimacy": -25,
+            "province_unrest_all": 30.0,
+            "nation_military_strength": 50
+          },
+          "console_message": "Gewaltsame Unterdrückung! Internationale Verurteilung. Innere Spannungen eskalieren."
+        },
+        {
+          "label": "Dialog suchen",
+          "description": "Persönlich mit Protestführern sprechen.",
+          "effects": {
+            "legitimacy": 20,
+            "money": -300000,
+            "province_unrest_all": -10.0
+          },
+          "console_message": "Dialogbereitschaft zeigt Wirkung. Kompromiss gefunden, Situation beruhigt."
+        }
+      ]
+    },
+    {
+      "id": "tech_breakthrough",
+      "title": "Wissenschaftlicher Durchbruch!",
+      "description": "Unsere Wissenschaftler haben einen Durchbruch bei erneuerbaren Energien erzielt!\n\nDie neue Technologie könnte unsere Energieversorgung revolutionieren - wenn wir richtig investieren.",
+      "type": "technology",
+      "options": [
+        {
+          "label": "Massiv investieren",
+          "description": "Alle verfügbaren Mittel in die Entwicklung stecken.",
+          "effects": {
+            "money": -5000000,
+            "nation_tech_level": 0.5,
+            "nation_gdp_growth": 2.0,
+            "legitimacy": 10
+          },
+          "console_message": "Massive Investitionen in neue Technologie. Tech-Level steigt, langfristige Vorteile erwartet."
+        },
+        {
+          "label": "Vorsichtig investieren",
+          "description": "Moderate Investitionen, Risiken begrenzen.",
+          "effects": {
+            "money": -1500000,
+            "nation_tech_level": 0.2,
+            "nation_gdp_growth": 0.5
+          },
+          "console_message": "Ausgewogene Investitionsstrategie. Solides Wachstum bei kontrollierten Kosten."
+        },
+        {
+          "label": "Technologie verkaufen",
+          "description": "Patente an Höchstbietende verkaufen.",
+          "effects": {
+            "money": 3000000,
+            "nation_tech_level": -0.1,
+            "legitimacy": -15
+          },
+          "console_message": "Technologie verkauft. Kurzfristige Gewinne, langfristig Abhängigkeit von anderen."
+        },
+        {
+          "label": "Realitäts-Boost: Sofortige Implementierung",
+          "description": "Realitätspunkte nutzen für instant Technologie-Sprung.",
+          "effects": {
+            "money": 2000000,
+            "reality_points": -30,
+            "nation_tech_level": 1.0,
+            "nation_gdp_growth": 4.0
+          },
+          "console_message": "REALITÄT MANIPULIERT. Technologie erscheint wie aus dem Nichts. Wissenschaftler sind verwirrt.",
+          "requires": {
+            "reality_points": 30
+          }
+        }
+      ]
+    },
+    {
+      "id": "minister_resignation",
+      "title": "Skandal: Minister bietet Rücktritt an",
+      "description": "Ihr Verteidigungsminister ist in einen Korruptionsskandal verwickelt!\n\nDie Opposition fordert seinen sofortigen Rücktritt. Ihre Partei will ihn schützen. Was tun Sie?",
+      "type": "character",
+      "options": [
+        {
+          "label": "Rücktritt akzeptieren",
+          "description": "Minister entlassen, Skandal eindämmen.",
+          "effects": {
+            "legitimacy": 5,
+            "nation_military_strength": -100
+          },
+          "console_message": "Minister zurückgetreten. Schnelle Schadensbegrenzung, aber militärische Führung geschwächt."
+        },
+        {
+          "label": "Minister schützen",
+          "description": "Skandal als politische Kampagne abtun.",
+          "effects": {
+            "legitimacy": -20,
+            "nation_military_strength": 50
+          },
+          "console_message": "Minister im Amt gehalten. Massive Legitimität verloren, aber Loyalität der Militärführung gestärkt."
+        },
+        {
+          "label": "Untersuchung anordnen",
+          "description": "Unabhängige Untersuchung einleiten.",
+          "effects": {
+            "money": -200000,
+            "legitimacy": 10
+          },
+          "console_message": "Transparente Untersuchung läuft. Öffentliches Vertrauen steigt."
+        },
+        {
+          "label": "Sündenbock opfern",
+          "description": "Untergebene beschuldigen, Minister schützen.",
+          "effects": {
+            "legitimacy": -10,
+            "nation_military_strength": 30
+          },
+          "console_message": "Sündenbock-Strategie. Kurzfristige Lösung, aber zynischer Präzedenzfall geschaffen."
+        }
+      ]
+    },
+    {
+      "id": "environmental_disaster",
+      "title": "Umweltkatastrophe: Ölpest",
+      "description": "Eine massive Ölpest bedroht unsere Küsten!\n\nTausende Seevögel sterben. Fischer verlieren ihre Existenz. Die Öffentlichkeit fordert Handlung.",
+      "type": "environmental",
+      "options": [
+        {
+          "label": "Großeinsatz starten",
+          "description": "Alle Ressourcen für Aufräumarbeiten mobilisieren.",
+          "effects": {
+            "money": -2500000,
+            "legitimacy": 15,
+            "province_unrest_coastal": -20.0
+          },
+          "console_message": "Massive Aufräumaktion gestartet. Kosten enorm, aber Umweltschaden minimiert."
+        },
+        {
+          "label": "Minimale Maßnahmen",
+          "description": "Nur Pflichtprogramm, Kosten minimieren.",
+          "effects": {
+            "money": -500000,
+            "legitimacy": -25,
+            "province_unrest_coastal": 40.0
+          },
+          "console_message": "Minimale Reaktion. Küstenbevölkerung empört, langfristige Umweltschäden."
+        },
+        {
+          "label": "Verursacher verklagen",
+          "description": "Internationale Ölfirma vor Gericht bringen.",
+          "effects": {
+            "money": 1500000,
+            "legitimacy": 20,
+            "relationship_all": -5
+          },
+          "console_message": "Klage erfolgreich! Schadenersatz erstritten, aber diplomatische Spannungen."
+        },
+        {
+          "label": "Realitäts-Reinigung: Öl verschwinden lassen",
+          "description": "Realitätspunkte nutzen, um Öl zu eliminieren.",
+          "effects": {
+            "reality_points": -40,
+            "legitimacy": -20,
+            "province_unrest_coastal": -50.0
+          },
+          "console_message": "REALITÄT MANIPULIERT. Öl verschwindet spurlos. Bevölkerung ist verstört und misstrauisch.",
+          "requires": {
+            "reality_points": 40
+          }
+        }
+      ]
+    },
+    {
+      "id": "military_incident",
+      "title": "Militärischer Zwischenfall",
+      "description": "Ein ausländisches Spionageflugzeug ist in unseren Luftraum eingedrungen!\n\nUnsere Luftwaffe hat es abgefangen. Der Pilot verweigert die Landung. Was befehlen Sie?",
+      "type": "military",
+      "options": [
+        {
+          "label": "Zur Landung zwingen",
+          "description": "Flugzeug mit Warnschüssen zur Landung zwingen.",
+          "effects": {
+            "legitimacy": 10,
+            "relationship_nordreich": -20,
+            "nation_military_strength": 50
+          },
+          "console_message": "Flugzeug zur Landung gezwungen. Stärke demonstriert, diplomatische Protestnote erwartet."
+        },
+        {
+          "label": "Eskorte aus Luftraum",
+          "description": "Flugzeug ohne Gewalt aus Luftraum geleiten.",
+          "effects": {
+            "legitimacy": -5,
+            "relationship_nordreich": 5
+          },
+          "console_message": "Flugzeug eskortiert. Deeskalation gelungen, aber Schwäche gezeigt."
+        },
+        {
+          "label": "Abschießen",
+          "description": "Flugzeug als feindlich einstufen und abschießen.",
+          "effects": {
+            "legitimacy": -15,
+            "relationship_nordreich": -50,
+            "nation_military_strength": 100
+          },
+          "console_message": "FLUGZEUG ABGESCHOSSEN! Internationale Empörung. Kriegsgefahr steigt massiv.",
+          "triggers_war_risk": true
+        },
+        {
+          "label": "Ignorieren",
+          "description": "Vorfall herunterspielen, nichts tun.",
+          "effects": {
+            "legitimacy": -20,
+            "nation_military_strength": -100
+          },
+          "console_message": "Vorfall ignoriert. Militär demoralisiert, internationale Wahrnehmung als schwach."
+        }
+      ]
+    }
+  ]
+}

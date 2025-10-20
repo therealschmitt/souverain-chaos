@@ -1,0 +1,15 @@
+{
+  "urban_names": [
+    "Hauptstadt",
+    "Metropole",
+    "Zentrum",
+    "City"
+  ],
+  "rural_names": [
+    "Nord",
+    "Süd",
+    "Ost",
+    "West",
+    "Landkreis"
+  ]
+}

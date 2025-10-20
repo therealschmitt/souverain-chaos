@@ -1,0 +1,22 @@
+{
+  "prefixes": [
+    "Nord",
+    "Süd",
+    "Ost",
+    "West",
+    "Zentral",
+    "Küsten",
+    "Berg",
+    "Tal"
+  ],
+  "suffixes": [
+    "land",
+    "provinz",
+    "gebiet",
+    "mark",
+    "reich",
+    "küste",
+    "wald",
+    "tal"
+  ]
+}

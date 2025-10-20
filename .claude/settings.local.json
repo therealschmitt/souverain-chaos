@@ -7,7 +7,9 @@
       "mcp__serena__find_symbol",
       "mcp__serena__activate_project",
       "mcp__ide__getDiagnostics",
-      "Bash(pwsh -Command \"Get-ChildItem -Path ''C:\\Users\\David\\Documents\\souverän'' -Recurse -Filter ''project.godot'' | Select-Object -ExpandProperty FullName\")"
+      "Bash(pwsh -Command \"Get-ChildItem -Path ''C:\\Users\\David\\Documents\\souverän'' -Recurse -Filter ''project.godot'' | Select-Object -ExpandProperty FullName\")",
+      "Bash(Get-ChildItem -Path \"C:\\Users\\David\\Documents\\souverän\\data\" -Recurse -File)",
+      "Bash(Select-Object FullName)"
     ]
   },
   "outputStyle": "default"

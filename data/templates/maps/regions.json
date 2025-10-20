@@ -1,0 +1,34 @@
+{
+  "regions": [
+    {
+      "id": "west_ocean",
+      "name": "Westliche Ozeanstaaten",
+      "color": [0.3, 0.5, 0.8],
+      "center_position": [400, 600],
+      "bounds": {
+        "min": [0, 0],
+        "max": [800, 1200]
+      }
+    },
+    {
+      "id": "central_continent",
+      "name": "Mittelkontinent",
+      "color": [0.7, 0.4, 0.3],
+      "center_position": [1200, 400],
+      "bounds": {
+        "min": [800, 0],
+        "max": [2000, 600]
+      }
+    },
+    {
+      "id": "southern_steppes",
+      "name": "Südliche Steppen",
+      "color": [0.8, 0.7, 0.4],
+      "center_position": [1200, 900],
+      "bounds": {
+        "min": [800, 600],
+        "max": [2000, 1200]
+      }
+    }
+  ]
+}

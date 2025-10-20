@@ -1,0 +1,109 @@
+{
+  "nations": [
+    {
+      "id": "thalassia",
+      "name": "Thalassische Republik",
+      "adjective": "thalassisch",
+      "region_id": "west_ocean",
+      "color": [0.2, 0.4, 0.7],
+      "government_type": "democracy",
+      "leader_character_id": "leader_thalassia",
+      "capital_province_id": "thalassia_capital",
+      "legitimacy": 65.0,
+      "gdp": 500000000000.0,
+      "population": 45000000,
+      "tech_level": 4,
+      "unemployment": 6.5,
+      "military_strength": 75.0,
+      "bounds": {
+        "min": [50, 50],
+        "max": [750, 550]
+      },
+      "num_provinces": 4
+    },
+    {
+      "id": "azuria",
+      "name": "Azurianische Föderation",
+      "adjective": "azurianisch",
+      "region_id": "west_ocean",
+      "color": [0.4, 0.6, 0.9],
+      "government_type": "federal_republic",
+      "leader_character_id": "leader_azuria",
+      "capital_province_id": "azuria_capital",
+      "legitimacy": 70.0,
+      "gdp": 350000000000.0,
+      "population": 32000000,
+      "tech_level": 4,
+      "unemployment": 5.2,
+      "military_strength": 65.0,
+      "bounds": {
+        "min": [50, 600],
+        "max": [750, 1150]
+      },
+      "num_provinces": 4
+    },
+    {
+      "id": "nordreich",
+      "name": "Nordreich",
+      "adjective": "nordisch",
+      "region_id": "central_continent",
+      "color": [0.6, 0.3, 0.2],
+      "government_type": "constitutional_monarchy",
+      "leader_character_id": "leader_nordreich",
+      "capital_province_id": "nordreich_capital",
+      "legitimacy": 80.0,
+      "gdp": 300000000000.0,
+      "population": 28000000,
+      "tech_level": 4,
+      "unemployment": 4.2,
+      "military_strength": 60.0,
+      "bounds": {
+        "min": [850, 50],
+        "max": [1950, 550]
+      },
+      "num_provinces": 4
+    },
+    {
+      "id": "centralia",
+      "name": "Kaiserreich Centralia",
+      "adjective": "centralisch",
+      "region_id": "southern_steppes",
+      "color": [0.8, 0.6, 0.3],
+      "government_type": "absolute_monarchy",
+      "leader_character_id": "leader_centralia",
+      "capital_province_id": "centralia_capital",
+      "legitimacy": 55.0,
+      "gdp": 280000000000.0,
+      "population": 38000000,
+      "tech_level": 3,
+      "unemployment": 8.5,
+      "military_strength": 70.0,
+      "bounds": {
+        "min": [850, 600],
+        "max": [1400, 1150]
+      },
+      "num_provinces": 4
+    },
+    {
+      "id": "suedkonfoederation",
+      "name": "Südkonföderation",
+      "adjective": "südlich",
+      "region_id": "southern_steppes",
+      "color": [0.7, 0.5, 0.2],
+      "government_type": "military_junta",
+      "leader_character_id": "leader_suedkonfoederation",
+      "capital_province_id": "sued_capital",
+      "legitimacy": 40.0,
+      "gdp": 180000000000.0,
+      "population": 25000000,
+      "tech_level": 3,
+      "unemployment": 12.0,
+      "military_strength": 85.0,
+      "bounds": {
+        "min": [1450, 650],
+        "max": [1950, 1150]
+      },
+      "num_provinces": 4
+    }
+  ]
+}
