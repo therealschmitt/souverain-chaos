@@ -1,0 +1,27 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Souverän"
+config/version="a0.1"
+run/main_scene="uid://c7rck11kx70f1"
+config/features=PackedStringArray("4.5", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+EventBus="*res://autoload/EventBus.gd"
+GameState="*res://autoload/GameState.gd"
+TimeManager="*res://autoload/TimeManager.gd"
+HistoricalContext="*res://autoload/HistoricalContext.gd"
+EventManager="*res://autoload/EventManager.gd"
+GameInitializer="*res://autoload/GameInitializer.gd"
+SaveManager="*res://autoload/SaveManager.gd"

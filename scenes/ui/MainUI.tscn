@@ -1,0 +1,388 @@
+[gd_scene load_steps=6 format=3 uid="uid://c7rck11kx70f1"]
+
+[ext_resource type="Script" uid="uid://dn86e5fqxeekf" path="res://scripts/ui/MainUIController.gd" id="1_main_ui"]
+[ext_resource type="PackedScene" path="res://scenes/ui/EventDialog.tscn" id="2_event_dialog"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SaveLoadMenu.tscn" id="3_save_load"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MainMenu.tscn" id="4_main_menu"]
+[ext_resource type="Script" path="res://scripts/ui/map/MapController.gd" id="5_map_controller"]
+
+[node name="MainUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main_ui")
+
+[node name="MapViewport" type="SubViewportContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="MapViewport"]
+handle_input_locally = false
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="MapCamera" type="Camera2D" parent="MapViewport/SubViewport"]
+position = Vector2(960, 540)
+
+[node name="MapContainer" type="Node2D" parent="MapViewport/SubViewport"]
+
+[node name="MapController" type="Node2D" parent="MapViewport/SubViewport/MapContainer"]
+script = ExtResource("5_map_controller")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="TopBar" type="PanelContainer" parent="UILayer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="UILayer/TopBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer"]
+layout_mode = 2
+
+[node name="MenuButton" type="Button" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Menu"
+
+[node name="Separator1" type="VSeparator" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="DateDisplay" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="DateLabel" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/DateDisplay"]
+layout_mode = 2
+text = "1. Januar 1"
+vertical_alignment = 1
+
+[node name="Separator2" type="VSeparator" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="SpeedControls" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="PauseButton" type="Button" parent="UILayer/TopBar/MarginContainer/HBoxContainer/SpeedControls"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "||"
+
+[node name="Speed1Button" type="Button" parent="UILayer/TopBar/MarginContainer/HBoxContainer/SpeedControls"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = ">"
+
+[node name="Speed2Button" type="Button" parent="UILayer/TopBar/MarginContainer/HBoxContainer/SpeedControls"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = ">>"
+
+[node name="Speed3Button" type="Button" parent="UILayer/TopBar/MarginContainer/HBoxContainer/SpeedControls"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = ">>>"
+
+[node name="Spacer" type="Control" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Resources" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="MoneyContainer" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="MoneyIcon" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources/MoneyContainer"]
+layout_mode = 2
+text = "$"
+
+[node name="MoneyLabel" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources/MoneyContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="VSeparator" type="VSeparator" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="LegitimacyContainer" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="LegitimacyIcon" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources/LegitimacyContainer"]
+layout_mode = 2
+text = "★"
+
+[node name="LegitimacyLabel" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources/LegitimacyContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "50"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="VSeparator2" type="VSeparator" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="RealityPointsContainer" type="HBoxContainer" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources"]
+layout_mode = 2
+
+[node name="RealityIcon" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources/RealityPointsContainer"]
+layout_mode = 2
+text = "◆"
+
+[node name="RealityLabel" type="Label" parent="UILayer/TopBar/MarginContainer/HBoxContainer/Resources/RealityPointsContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BottomBar" type="PanelContainer" parent="UILayer"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -120.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="UILayer/BottomBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UILayer/BottomBar/MarginContainer"]
+layout_mode = 2
+
+[node name="InfoDisplay" type="HBoxContainer" parent="UILayer/BottomBar/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ProvinceInfo" type="VBoxContainer" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProvinceNameLabel" type="Label" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay/ProvinceInfo"]
+layout_mode = 2
+text = "Keine Provinz ausgewählt"
+vertical_alignment = 1
+
+[node name="ProvinceDetailsLabel" type="Label" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay/ProvinceInfo"]
+layout_mode = 2
+text = "Klicken Sie auf eine Provinz für Details"
+vertical_alignment = 1
+
+[node name="VSeparator" type="VSeparator" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay"]
+layout_mode = 2
+
+[node name="CharacterInfo" type="VBoxContainer" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CharacterNameLabel" type="Label" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay/CharacterInfo"]
+layout_mode = 2
+text = "Kein Charakter"
+vertical_alignment = 1
+
+[node name="CharacterDetailsLabel" type="Label" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay/CharacterInfo"]
+layout_mode = 2
+vertical_alignment = 1
+
+[node name="ActionButtons" type="HBoxContainer" parent="UILayer/BottomBar/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="AdvisorsButton" type="Button" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Berater"
+
+[node name="MilitaryButton" type="Button" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Militär"
+
+[node name="DiplomacyButton" type="Button" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Diplomatie"
+
+[node name="EconomyButton" type="Button" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Wirtschaft"
+
+[node name="TechnologyButton" type="Button" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Technologie"
+
+[node name="Spacer" type="Control" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CharactersButton" type="Button" parent="UILayer/BottomBar/MarginContainer/VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Charaktere"
+
+[node name="RightPanel" type="PanelContainer" parent="UILayer"]
+visible = false
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = 50.0
+offset_bottom = -120.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="UILayer/RightPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="TabContainer" type="TabContainer" parent="UILayer/RightPanel/MarginContainer"]
+layout_mode = 2
+current_tab = 0
+
+[node name="Nation" type="VBoxContainer" parent="UILayer/RightPanel/MarginContainer/TabContainer"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="NationLabel" type="Label" parent="UILayer/RightPanel/MarginContainer/TabContainer/Nation"]
+layout_mode = 2
+text = "Nationale Übersicht"
+
+[node name="Statistics" type="VBoxContainer" parent="UILayer/RightPanel/MarginContainer/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="StatsLabel" type="Label" parent="UILayer/RightPanel/MarginContainer/TabContainer/Statistics"]
+layout_mode = 2
+text = "Statistiken"
+
+[node name="LeftPanel" type="PanelContainer" parent="UILayer"]
+visible = false
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = -120.0
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="UILayer/LeftPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UILayer/LeftPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UILayer/LeftPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Panel"
+
+[node name="CloseButton" type="Button" parent="UILayer/LeftPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Schließen"
+
+[node name="EventNotifications" type="VBoxContainer" parent="UILayer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 60.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+
+[node name="EventPanel" type="PanelContainer" parent="UILayer/EventNotifications"]
+visible = false
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="UILayer/EventNotifications/EventPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UILayer/EventNotifications/EventPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="EventTitle" type="Label" parent="UILayer/EventNotifications/EventPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Event Title"
+
+[node name="EventDescription" type="Label" parent="UILayer/EventNotifications/EventPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Event description goes here"
+autowrap_mode = 3
+
+[node name="EventButtons" type="HBoxContainer" parent="UILayer/EventNotifications/EventPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Option1Button" type="Button" parent="UILayer/EventNotifications/EventPanel/MarginContainer/VBoxContainer/EventButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Option 1"
+
+[node name="Option2Button" type="Button" parent="UILayer/EventNotifications/EventPanel/MarginContainer/VBoxContainer/EventButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Option 2"
+
+[node name="MapControls" type="VBoxContainer" parent="UILayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -200.0
+offset_right = -10.0
+offset_bottom = -130.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="ZoomInButton" type="Button" parent="UILayer/MapControls"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "+"
+
+[node name="ZoomOutButton" type="Button" parent="UILayer/MapControls"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "-"
+
+[node name="EventDialog" parent="UILayer" instance=ExtResource("2_event_dialog")]
+visible = false
+
+[node name="SaveLoadMenu" parent="UILayer" instance=ExtResource("3_save_load")]
+visible = false
+
+[node name="MainMenu" parent="UILayer" instance=ExtResource("4_main_menu")]
+visible = false

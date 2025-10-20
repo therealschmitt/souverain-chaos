@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__serena__get_symbols_overview",
+      "Bash(dir /s /b *.gd)",
+      "Bash(findstr /i \"Region.gd District.gd MapDataGenerator.gd MapController.gd\")",
+      "mcp__serena__find_symbol",
+      "mcp__serena__activate_project",
+      "mcp__ide__getDiagnostics",
+      "Bash(pwsh -Command \"Get-ChildItem -Path ''C:\\Users\\David\\Documents\\souverän'' -Recurse -Filter ''project.godot'' | Select-Object -ExpandProperty FullName\")"
+    ]
+  },
+  "outputStyle": "default"
+}
