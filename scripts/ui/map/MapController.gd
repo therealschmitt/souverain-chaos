@@ -34,6 +34,12 @@ var nation_shapes: Dictionary = {}    # nation_id -> Polygon2D
 var province_shapes: Dictionary = {}  # province_id -> Polygon2D
 var district_shapes: Dictionary = {}  # district_id -> Polygon2D
 
+# === TERRITORY LABELS ===
+var region_labels: Dictionary = {}    # region_id -> Label2D
+var nation_labels: Dictionary = {}    # nation_id -> Label2D
+var province_labels: Dictionary = {}  # province_id -> Label2D
+var district_labels: Dictionary = {}  # district_id -> Label2D
+
 # === INTERACTION ===
 var hovered_territory: Dictionary = {}  # {type: String, id: String}
 var selected_territory: Dictionary = {}  # {type: String, id: String}
@@ -141,6 +147,11 @@ func _create_region_polygon(region) -> void:
 	region_layer.add_child(polygon)
 	region_shapes[region.id] = polygon
 
+	# Label erstellen
+	var label = _create_territory_label(region.name, region.boundary_polygon, 24)
+	label_layer.add_child(label)
+	region_labels[region.id] = label
+
 func _create_nation_polygon(nation) -> void:
 	if nation.boundary_polygon.size() < 3:
 		return
@@ -163,6 +174,11 @@ func _create_nation_polygon(nation) -> void:
 
 	nation_layer.add_child(polygon)
 	nation_shapes[nation.id] = polygon
+
+	# Label erstellen
+	var label = _create_territory_label(nation.name, nation.boundary_polygon, 20)
+	label_layer.add_child(label)
+	nation_labels[nation.id] = label
 
 func _create_province_polygon(province) -> void:
 	if province.boundary_polygon.size() < 3:
@@ -187,6 +203,11 @@ func _create_province_polygon(province) -> void:
 	province_layer.add_child(polygon)
 	province_shapes[province.id] = polygon
 
+	# Label erstellen
+	var label = _create_territory_label(province.name, province.boundary_polygon, 16)
+	label_layer.add_child(label)
+	province_labels[province.id] = label
+
 func _create_district_polygon(district) -> void:
 	if district.boundary_polygon.size() < 3:
 		return
@@ -210,6 +231,44 @@ func _create_district_polygon(district) -> void:
 	district_layer.add_child(polygon)
 	district_shapes[district.id] = polygon
 
+	# Label erstellen
+	var label = _create_territory_label(district.name, district.boundary_polygon, 12)
+	label_layer.add_child(label)
+	district_labels[district.id] = label
+
+func _create_territory_label(territory_name: String, polygon: PackedVector2Array, font_size: int) -> Label:
+	"""Erstellt ein Label für ein Territorium in der Mitte des Polygons."""
+	var label = Label.new()
+	label.text = territory_name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	# Schriftgröße setzen
+	label.add_theme_font_size_override("font_size", font_size)
+
+	# Position in der Mitte des Polygons
+	var center = _get_polygon_center(polygon)
+	label.position = center
+
+	# Label zentrieren (Label pivot point ist top-left, daher verschieben)
+	# Wir verwenden pivot_offset damit das Label zentriert ist
+	label.pivot_offset = label.size / 2.0
+
+	# Schatten/Outline für bessere Lesbarkeit
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 2)
+
+	# Weiße Schriftfarbe als Standard
+	label.add_theme_color_override("font_color", Color.WHITE)
+
+	return label
+
+func _update_label_visibility(label_dict: Dictionary, visible: bool) -> void:
+	"""Aktualisiert die Sichtbarkeit aller Labels in einem Dictionary."""
+	for label in label_dict.values():
+		if label:
+			label.visible = visible
+
 # === ZOOM CONTROL ===
 
 func _update_layer_visibility() -> void:
@@ -218,6 +277,12 @@ func _update_layer_visibility() -> void:
 	nation_layer.visible = (current_zoom_level == ZoomLevel.REGION)
 	province_layer.visible = (current_zoom_level == ZoomLevel.NATION)
 	district_layer.visible = (current_zoom_level == ZoomLevel.PROVINCE)
+
+	# Label-Sichtbarkeit basierend auf Zoom-Level
+	_update_label_visibility(region_labels, current_zoom_level == ZoomLevel.WORLD)
+	_update_label_visibility(nation_labels, current_zoom_level == ZoomLevel.REGION)
+	_update_label_visibility(province_labels, current_zoom_level == ZoomLevel.NATION)
+	_update_label_visibility(district_labels, current_zoom_level == ZoomLevel.PROVINCE)
 
 func _zoom_to_world() -> void:
 	"""Zoom auf Weltkarte (Regionen)."""

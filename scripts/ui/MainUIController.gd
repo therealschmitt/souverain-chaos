@@ -11,11 +11,9 @@ extends Control
 @onready var legitimacy_label := $UILayer/TopBar/MarginContainer/HBoxContainer/Resources/LegitimacyContainer/LegitimacyLabel
 @onready var reality_label := $UILayer/TopBar/MarginContainer/HBoxContainer/Resources/RealityPointsContainer/RealityLabel
 
-# Time controls (new event-driven system)
-# Note: UI nodes müssen noch in der .tscn Datei erstellt werden
-# @onready var continue_button := $UILayer/TopBar/MarginContainer/HBoxContainer/TimeControls/ContinueButton
-# @onready var time_speed_label := $UILayer/TopBar/MarginContainer/HBoxContainer/TimeControls/SpeedLabel
-# @onready var next_event_label := $UILayer/TopBar/MarginContainer/HBoxContainer/TimeControls/NextEventLabel
+# Time controls
+@onready var pause_button := $UILayer/TopBar/MarginContainer/HBoxContainer/SpeedControls/PauseButton
+@onready var play_button := $UILayer/TopBar/MarginContainer/HBoxContainer/SpeedControls/Speed1Button
 
 # Bottom bar
 @onready var province_name_label := $UILayer/BottomBar/MarginContainer/VBoxContainer/InfoDisplay/ProvinceInfo/ProvinceNameLabel
@@ -97,9 +95,9 @@ func _connect_signals() -> void:
 	EventBus.game_resumed.connect(_on_game_resumed)
 
 func _connect_buttons() -> void:
-	# Time controls (new system)
-	# TODO: Wenn UI-Nodes erstellt sind:
-	# continue_button.pressed.connect(_on_continue_pressed)
+	# Time controls
+	pause_button.pressed.connect(_on_pause_pressed)
+	play_button.pressed.connect(_on_play_pressed)
 
 	# Menu button
 	menu_button.pressed.connect(_on_menu_button_pressed)
@@ -260,11 +258,21 @@ func _update_character_info() -> void:
 
 func _update_time_controls() -> void:
 	"""Aktualisiert die Zeitsteuerung (neues event-driven System)."""
-	# TODO: Wenn UI-Nodes erstellt sind, hier aktualisieren:
-	# continue_button.disabled = TimeManager.event_queue.is_empty()
-	# time_speed_label.text = TimeManager.get_current_speed_description()
-	# next_event_label.text = TimeManager.get_next_event_description()
-	pass
+	var is_running = TimeManager.is_running
+
+	# Pause-Button deaktivieren wenn Zeit bereits pausiert
+	pause_button.disabled = not is_running
+
+	# Play-Button deaktivieren wenn Zeit bereits läuft
+	play_button.disabled = is_running
+
+	# Visuelles Feedback
+	if is_running:
+		pause_button.modulate = Color.WHITE
+		play_button.modulate = Color(0.5, 0.5, 0.5)
+	else:
+		pause_button.modulate = Color(0.5, 0.5, 0.5)
+		play_button.modulate = Color.WHITE
 
 # Event handlers
 func _on_day_passed(day: int) -> void:
@@ -330,9 +338,17 @@ func _on_menu_button_pressed() -> void:
 	"""Menu-Button: Öffnet das Hauptmenü."""
 	main_menu.open_menu()
 
-func _on_continue_pressed() -> void:
-	"""Neuer Button-Handler: Weiter zum nächsten Event."""
-	TimeManager.continue_to_next_event()
+func _on_pause_pressed() -> void:
+	"""Pause-Button: Pausiert die Zeit."""
+	if TimeManager.is_running:
+		TimeManager.pause_time()
+		print("[UI] Zeit pausiert")
+
+func _on_play_pressed() -> void:
+	"""Play-Button: Startet die Zeit."""
+	if not TimeManager.is_running:
+		TimeManager.continue_to_next_event()
+		print("[UI] Zeit gestartet")
 
 func _on_zoom_in() -> void:
 	_zoom_camera(ZOOM_STEP)

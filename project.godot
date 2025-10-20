@@ -25,3 +25,7 @@ HistoricalContext="*res://autoload/HistoricalContext.gd"
 EventManager="*res://autoload/EventManager.gd"
 GameInitializer="*res://autoload/GameInitializer.gd"
 SaveManager="*res://autoload/SaveManager.gd"
+
+[dotnet]
+
+project/assembly_name="Souverän"
