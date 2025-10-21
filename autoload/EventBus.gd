@@ -32,7 +32,6 @@ signal decision_made(event_id: String, choice_id: String)
 # === UI EVENTS ===
 signal ui_panel_opened(panel_name: String)
 signal ui_panel_closed(panel_name: String)
-signal map_zoom_changed(zoom_level: int)
 signal province_selected(province_id: String)
 
 # === CHARACTER EVENTS ===

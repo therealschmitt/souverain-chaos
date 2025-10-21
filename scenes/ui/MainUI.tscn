@@ -29,9 +29,6 @@ handle_input_locally = false
 size = Vector2i(1152, 648)
 render_target_update_mode = 4
 
-[node name="MapCamera" type="Camera2D" parent="MapViewport/SubViewport"]
-position = Vector2(960, 540)
-
 [node name="MapContainer" type="Node2D" parent="MapViewport/SubViewport"]
 
 [node name="MapController" type="Node2D" parent="MapViewport/SubViewport/MapContainer"]
@@ -344,29 +341,6 @@ text = "Option 1"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Option 2"
-
-[node name="MapControls" type="VBoxContainer" parent="UILayer"]
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -60.0
-offset_top = -200.0
-offset_right = -10.0
-offset_bottom = -130.0
-grow_horizontal = 0
-grow_vertical = 0
-
-[node name="ZoomInButton" type="Button" parent="UILayer/MapControls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 2
-text = "+"
-
-[node name="ZoomOutButton" type="Button" parent="UILayer/MapControls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 2
-text = "-"
 
 [node name="EventDialog" parent="UILayer" instance=ExtResource("2_event_dialog")]
 visible = false

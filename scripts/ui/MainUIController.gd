@@ -2,7 +2,6 @@ extends Control
 
 # References to UI elements
 @onready var map_viewport := $MapViewport
-@onready var map_camera := $MapViewport/SubViewport/MapCamera
 @onready var map_container := $MapViewport/SubViewport/MapContainer
 
 # Top bar
@@ -36,10 +35,6 @@ extends Control
 # Main Menu
 @onready var main_menu := $UILayer/MainMenu
 
-# Map controls
-@onready var zoom_in_button := $UILayer/MapControls/ZoomInButton
-@onready var zoom_out_button := $UILayer/MapControls/ZoomOutButton
-
 # Menu button (Top bar)
 @onready var menu_button := $UILayer/TopBar/MarginContainer/HBoxContainer/MenuButton
 
@@ -54,11 +49,6 @@ extends Control
 # State
 var selected_province_id: String = ""
 var selected_character_id: String = ""
-var current_zoom: float = 1.0
-
-const ZOOM_MIN: float = 0.5
-const ZOOM_MAX: float = 3.0
-const ZOOM_STEP: float = 0.2
 
 const MONTH_NAMES := [
 	"", "Januar", "Februar", "März", "April", "Mai", "Juni",
@@ -102,10 +92,6 @@ func _connect_buttons() -> void:
 	# Menu button
 	menu_button.pressed.connect(_on_menu_button_pressed)
 
-	# Map controls
-	zoom_in_button.pressed.connect(_on_zoom_in)
-	zoom_out_button.pressed.connect(_on_zoom_out)
-
 	# Action buttons
 	advisors_button.pressed.connect(func(): _toggle_panel("advisors"))
 	military_button.pressed.connect(func(): _toggle_panel("military"))
@@ -120,38 +106,9 @@ func _connect_buttons() -> void:
 		close_btn.pressed.connect(_close_left_panel)
 
 func _process(delta: float) -> void:
-	_handle_camera_input(delta)
 	_update_date_display()  # Datum ständig aktualisieren
 
-func _handle_camera_input(delta: float) -> void:
-	var camera_speed := 500.0 / current_zoom
-	var movement := Vector2.ZERO
-
-	# WASD movement
-	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
-		movement.y -= 1
-	if Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
-		movement.y += 1
-	if Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
-		movement.x -= 1
-	if Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
-		movement.x += 1
-
-	if movement.length() > 0:
-		map_camera.position += movement.normalized() * camera_speed * delta
-
 func _input(event: InputEvent) -> void:
-	# Mouse wheel zoom
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-			_zoom_camera(ZOOM_STEP)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			_zoom_camera(-ZOOM_STEP)
-
-	# Edge scrolling
-	if event is InputEventMouseMotion:
-		_handle_edge_scrolling(event.position)
-
 	# TEMPORÄR: Leertaste zum Fortsetzen der Zeit
 	if event is InputEventKey:
 		if event.keycode == KEY_SPACE and event.pressed and not event.echo:
@@ -176,26 +133,6 @@ func _input(event: InputEvent) -> void:
 				main_menu.open_menu()
 			else:
 				main_menu.open_menu()
-
-func _handle_edge_scrolling(mouse_pos: Vector2) -> void:
-	const EDGE_MARGIN := 10.0
-	const EDGE_SPEED := 300.0
-
-	var viewport_size := get_viewport_rect().size
-	var movement := Vector2.ZERO
-
-	if mouse_pos.x < EDGE_MARGIN:
-		movement.x -= 1
-	elif mouse_pos.x > viewport_size.x - EDGE_MARGIN:
-		movement.x += 1
-
-	if mouse_pos.y < EDGE_MARGIN:
-		movement.y -= 1
-	elif mouse_pos.y > viewport_size.y - EDGE_MARGIN:
-		movement.y += 1
-
-	if movement.length() > 0:
-		map_camera.position += movement.normalized() * EDGE_SPEED * get_process_delta_time()
 
 func _update_ui() -> void:
 	_update_date_display()
@@ -349,17 +286,6 @@ func _on_play_pressed() -> void:
 	if not TimeManager.is_running:
 		TimeManager.continue_to_next_event()
 		print("[UI] Zeit gestartet")
-
-func _on_zoom_in() -> void:
-	_zoom_camera(ZOOM_STEP)
-
-func _on_zoom_out() -> void:
-	_zoom_camera(-ZOOM_STEP)
-
-func _zoom_camera(delta_zoom: float) -> void:
-	current_zoom = clamp(current_zoom + delta_zoom, ZOOM_MIN, ZOOM_MAX)
-	map_camera.zoom = Vector2(current_zoom, current_zoom)
-	EventBus.map_zoom_changed.emit(int(current_zoom * 10))
 
 # Panel management
 func _toggle_panel(panel_type: String) -> void:

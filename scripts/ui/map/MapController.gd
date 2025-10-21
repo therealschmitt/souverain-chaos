@@ -1,25 +1,18 @@
 extends Node2D
 
-## Hierarchischer Karten-Controller mit 4 Zoomstufen
-## Stufe 1: Weltkarte (Regionen)
-## Stufe 2: Region (Nationen innerhalb der Region)
-## Stufe 3: Nation (Provinzen innerhalb der Nation)
-## Stufe 4: Provinz (Distrikte innerhalb der Provinz)
-
 signal territory_clicked(territory_type: String, territory_id: String)
 
-# === ZOOM SYSTEM ===
-enum ZoomLevel {
-	WORLD = 1,      # Regionen sichtbar
-	REGION = 2,     # Nationen sichtbar
-	NATION = 3,     # Provinzen sichtbar
-	PROVINCE = 4    # Distrikte sichtbar
-}
+# === COORDINATE SYSTEM & METRICS ===
+const MAP_WIDTH = 2000.0
+const MAP_HEIGHT = 1200.0
+const PIXELS_PER_KM = 0.5
+const KM_PER_PIXEL = 2.0
 
-var current_zoom_level: ZoomLevel = ZoomLevel.WORLD
-var focused_region_id: String = ""
-var focused_nation_id: String = ""
-var focused_province_id: String = ""
+# Geografisches Koordinatensystem
+const GEO_LON_MIN = -180.0
+const GEO_LON_MAX = 180.0
+const GEO_LAT_MIN = -90.0
+const GEO_LAT_MAX = 90.0
 
 # === MAP LAYERS ===
 var region_layer: Node2D
@@ -29,25 +22,20 @@ var district_layer: Node2D
 var label_layer: Node2D
 
 # === TERRITORY SHAPES ===
-var region_shapes: Dictionary = {}    # region_id -> Polygon2D
-var nation_shapes: Dictionary = {}    # nation_id -> Polygon2D
-var province_shapes: Dictionary = {}  # province_id -> Polygon2D
-var district_shapes: Dictionary = {}  # district_id -> Polygon2D
+var region_shapes: Dictionary = {}
+var nation_shapes: Dictionary = {}
+var province_shapes: Dictionary = {}
+var district_shapes: Dictionary = {}
 
 # === TERRITORY LABELS ===
-var region_labels: Dictionary = {}    # region_id -> Label2D
-var nation_labels: Dictionary = {}    # nation_id -> Label2D
-var province_labels: Dictionary = {}  # province_id -> Label2D
-var district_labels: Dictionary = {}  # district_id -> Label2D
+var region_labels: Dictionary = {}
+var nation_labels: Dictionary = {}
+var province_labels: Dictionary = {}
+var district_labels: Dictionary = {}
 
 # === INTERACTION ===
-var hovered_territory: Dictionary = {}  # {type: String, id: String}
-var selected_territory: Dictionary = {}  # {type: String, id: String}
-
-# === CAMERA ===
-var target_position: Vector2 = Vector2.ZERO
-var target_scale: float = 1.0
-var zoom_animation_speed: float = 5.0
+var hovered_territory: Dictionary = {}
+var selected_territory: Dictionary = {}
 
 func _ready() -> void:
 	_setup_layers()
@@ -55,7 +43,7 @@ func _ready() -> void:
 	call_deferred("_delayed_load")
 
 func _delayed_load() -> void:
-	"""Lädt die Karte verzögert, nachdem GameInitializer fertig ist."""
+	"""Lädt die Karte verzögert."""
 	if GameState.provinces.size() == 0:
 		print("MapController: Warte auf Provinz-Daten...")
 		await get_tree().create_timer(0.5).timeout
@@ -63,9 +51,10 @@ func _delayed_load() -> void:
 		return
 
 	_load_map_data()
+	_center_map()
 
 func _setup_layers() -> void:
-	"""Erstellt alle Map-Layer in der richtigen Reihenfolge."""
+	"""Erstellt Map-Layer als Node2D-Hierarchie."""
 	region_layer = Node2D.new()
 	region_layer.name = "RegionLayer"
 	add_child(region_layer)
@@ -90,37 +79,50 @@ func _connect_signals() -> void:
 	EventBus.province_selected.connect(_on_province_selected)
 
 func _load_map_data() -> void:
-	"""Lädt alle territorialen Daten."""
+	"""Lädt alle Kartendaten."""
 	print("MapController: Lade Kartendaten...")
 
-	# Regionen laden
 	for region_id in GameState.regions.keys():
-		var region = GameState.regions[region_id]
-		_create_region_polygon(region)
+		_create_region_polygon(GameState.regions[region_id])
 
-	# Nationen laden
 	for nation_id in GameState.nations.keys():
-		var nation = GameState.nations[nation_id]
-		_create_nation_polygon(nation)
+		_create_nation_polygon(GameState.nations[nation_id])
 
-	# Provinzen laden
 	for province_id in GameState.provinces.keys():
-		var province = GameState.provinces[province_id]
-		_create_province_polygon(province)
+		_create_province_polygon(GameState.provinces[province_id])
 
-	# Distrikte laden
 	for district_id in GameState.districts.keys():
-		var district = GameState.districts[district_id]
-		_create_district_polygon(district)
+		_create_district_polygon(GameState.districts[district_id])
 
 	print("MapController: %d Regionen, %d Nationen, %d Provinzen, %d Distrikte geladen" % [
 		region_shapes.size(), nation_shapes.size(), province_shapes.size(), district_shapes.size()
 	])
 
-	_update_layer_visibility()
+	# Alle Layer sichtbar (statisch)
+	region_layer.visible = true
+	nation_layer.visible = true
+	province_layer.visible = true
+	district_layer.visible = false  # Distrikte standardmäßig aus
 
-	# Starte bei Weltkarte-Ansicht
-	_zoom_to_world()
+	# Alle Labels sichtbar
+	for label in region_labels.values():
+		if label:
+			label.visible = true
+	for label in nation_labels.values():
+		if label:
+			label.visible = true
+	for label in province_labels.values():
+		if label:
+			label.visible = true
+
+func _center_map() -> void:
+	"""Zentriert Karte im Viewport."""
+	var viewport_size = get_viewport_rect().size
+	position = Vector2(
+		(viewport_size.x - MAP_WIDTH) / 2.0,
+		(viewport_size.y - MAP_HEIGHT) / 2.0
+	)
+	scale = Vector2(1.0, 1.0)
 
 # === POLYGON CREATION ===
 
@@ -132,13 +134,15 @@ func _create_region_polygon(region) -> void:
 	polygon.name = "Region_" + region.id
 	polygon.polygon = region.boundary_polygon
 	polygon.color = region.color
+	polygon.antialiased = true
+	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	# Dicke Grenze für Regionen
 	var line = Line2D.new()
 	line.points = region.boundary_polygon
 	line.add_point(region.boundary_polygon[0])
 	line.default_color = Color(0.0, 0.0, 0.0, 1.0)
 	line.width = 4.0
+	line.antialiased = true
 	polygon.add_child(line)
 
 	polygon.set_meta("territory_type", "region")
@@ -147,9 +151,7 @@ func _create_region_polygon(region) -> void:
 	region_layer.add_child(polygon)
 	region_shapes[region.id] = polygon
 
-	# Label erstellen
 	var label = _create_territory_label(region.name, region.boundary_polygon, 24)
-	label_layer.add_child(label)
 	region_labels[region.id] = label
 
 func _create_nation_polygon(nation) -> void:
@@ -160,13 +162,15 @@ func _create_nation_polygon(nation) -> void:
 	polygon.name = "Nation_" + nation.id
 	polygon.polygon = nation.boundary_polygon
 	polygon.color = nation.color
+	polygon.antialiased = true
+	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	# Mittlere Grenze für Nationen
 	var line = Line2D.new()
 	line.points = nation.boundary_polygon
 	line.add_point(nation.boundary_polygon[0])
 	line.default_color = Color(0.0, 0.0, 0.0, 1.0)
 	line.width = 3.0
+	line.antialiased = true
 	polygon.add_child(line)
 
 	polygon.set_meta("territory_type", "nation")
@@ -175,9 +179,7 @@ func _create_nation_polygon(nation) -> void:
 	nation_layer.add_child(polygon)
 	nation_shapes[nation.id] = polygon
 
-	# Label erstellen
 	var label = _create_territory_label(nation.name, nation.boundary_polygon, 20)
-	label_layer.add_child(label)
 	nation_labels[nation.id] = label
 
 func _create_province_polygon(province) -> void:
@@ -188,13 +190,15 @@ func _create_province_polygon(province) -> void:
 	polygon.name = "Province_" + province.id
 	polygon.polygon = province.boundary_polygon
 	polygon.color = province.color
+	polygon.antialiased = true
+	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	# Dünne Grenze für Provinzen
 	var line = Line2D.new()
 	line.points = province.boundary_polygon
 	line.add_point(province.boundary_polygon[0])
 	line.default_color = Color(0.2, 0.2, 0.2, 0.8)
 	line.width = 2.0
+	line.antialiased = true
 	polygon.add_child(line)
 
 	polygon.set_meta("territory_type", "province")
@@ -203,9 +207,7 @@ func _create_province_polygon(province) -> void:
 	province_layer.add_child(polygon)
 	province_shapes[province.id] = polygon
 
-	# Label erstellen
 	var label = _create_territory_label(province.name, province.boundary_polygon, 16)
-	label_layer.add_child(label)
 	province_labels[province.id] = label
 
 func _create_district_polygon(district) -> void:
@@ -216,13 +218,15 @@ func _create_district_polygon(district) -> void:
 	polygon.name = "District_" + district.id
 	polygon.polygon = district.boundary_polygon
 	polygon.color = district.color.darkened(0.05)
+	polygon.antialiased = true
+	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	# Sehr dünne Grenze für Distrikte
 	var line = Line2D.new()
 	line.points = district.boundary_polygon
 	line.add_point(district.boundary_polygon[0])
 	line.default_color = Color(0.3, 0.3, 0.3, 0.5)
 	line.width = 1.0
+	line.antialiased = true
 	polygon.add_child(line)
 
 	polygon.set_meta("territory_type", "district")
@@ -231,161 +235,45 @@ func _create_district_polygon(district) -> void:
 	district_layer.add_child(polygon)
 	district_shapes[district.id] = polygon
 
-	# Label erstellen
 	var label = _create_territory_label(district.name, district.boundary_polygon, 12)
-	label_layer.add_child(label)
 	district_labels[district.id] = label
 
 func _create_territory_label(territory_name: String, polygon: PackedVector2Array, font_size: int) -> Label:
-	"""Erstellt ein Label für ein Territorium in der Mitte des Polygons."""
+	"""Erstellt Label für Territorium."""
 	var label = Label.new()
 	label.text = territory_name
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
-	# Schriftgröße setzen
 	label.add_theme_font_size_override("font_size", font_size)
 
-	# Position in der Mitte des Polygons
+	# Position in World-Koordinaten (Polygon-Zentrum)
 	var center = _get_polygon_center(polygon)
 	label.position = center
 
-	# Label zentrieren (Label pivot point ist top-left, daher verschieben)
-	# Wir verwenden pivot_offset damit das Label zentriert ist
-	label.pivot_offset = label.size / 2.0
-
-	# Schatten/Outline für bessere Lesbarkeit
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 2)
-
-	# Weiße Schriftfarbe als Standard
 	label.add_theme_color_override("font_color", Color.WHITE)
+
+	# Größe und Pivot für Zentrierung
+	label.custom_minimum_size = Vector2(200, 40)
+	label.pivot_offset = label.custom_minimum_size / 2.0
+
+	label_layer.add_child(label)
 
 	return label
 
-func _update_label_visibility(label_dict: Dictionary, visible: bool) -> void:
-	"""Aktualisiert die Sichtbarkeit aller Labels in einem Dictionary."""
-	for label in label_dict.values():
-		if label:
-			label.visible = visible
-
-# === ZOOM CONTROL ===
-
-func _update_layer_visibility() -> void:
-	"""Aktualisiert Layer-Sichtbarkeit basierend auf Zoom-Level."""
-	region_layer.visible = (current_zoom_level == ZoomLevel.WORLD)
-	nation_layer.visible = (current_zoom_level == ZoomLevel.REGION)
-	province_layer.visible = (current_zoom_level == ZoomLevel.NATION)
-	district_layer.visible = (current_zoom_level == ZoomLevel.PROVINCE)
-
-	# Label-Sichtbarkeit basierend auf Zoom-Level
-	_update_label_visibility(region_labels, current_zoom_level == ZoomLevel.WORLD)
-	_update_label_visibility(nation_labels, current_zoom_level == ZoomLevel.REGION)
-	_update_label_visibility(province_labels, current_zoom_level == ZoomLevel.NATION)
-	_update_label_visibility(district_labels, current_zoom_level == ZoomLevel.PROVINCE)
-
-func _zoom_to_world() -> void:
-	"""Zoom auf Weltkarte (Regionen)."""
-	current_zoom_level = ZoomLevel.WORLD
-	focused_region_id = ""
-	focused_nation_id = ""
-	focused_province_id = ""
-
-	target_scale = 1.0
-	target_position = Vector2.ZERO
-
-	_update_layer_visibility()
-	print("MapController: Zoom Level 1 - Weltkarte")
-
-func _zoom_to_region(region_id: String) -> void:
-	"""Zoom auf eine Region (Nationen innerhalb der Region)."""
-	var region = GameState.regions.get(region_id)
-	if not region:
-		return
-
-	current_zoom_level = ZoomLevel.REGION
-	focused_region_id = region_id
-	focused_nation_id = ""
-	focused_province_id = ""
-
-	target_scale = 2.0
-	target_position = -region.center_position * target_scale + get_viewport_rect().size / 2
-
-	_update_layer_visibility()
-	print("MapController: Zoom Level 2 - Region: %s" % region.name)
-
-func _zoom_to_nation(nation_id: String) -> void:
-	"""Zoom auf eine Nation (Provinzen innerhalb der Nation)."""
-	var nation = GameState.nations.get(nation_id)
-	if not nation:
-		return
-
-	current_zoom_level = ZoomLevel.NATION
-	focused_nation_id = nation_id
-	focused_province_id = ""
-
-	var nation_center = _get_polygon_center(nation.boundary_polygon)
-	target_scale = 3.0
-	target_position = -nation_center * target_scale + get_viewport_rect().size / 2
-
-	_update_layer_visibility()
-	print("MapController: Zoom Level 3 - Nation: %s" % nation.name)
-
-func _zoom_to_province(province_id: String) -> void:
-	"""Zoom auf eine Provinz (Distrikte innerhalb der Provinz)."""
-	var province = GameState.provinces.get(province_id)
-	if not province:
-		return
-
-	current_zoom_level = ZoomLevel.PROVINCE
-	focused_province_id = province_id
-
-	target_scale = 5.0
-	target_position = -province.position * target_scale + get_viewport_rect().size / 2
-
-	_update_layer_visibility()
-	print("MapController: Zoom Level 4 - Provinz: %s" % province.name)
-
-func zoom_out() -> void:
-	"""Zoomt eine Stufe heraus."""
-	match current_zoom_level:
-		ZoomLevel.PROVINCE:
-			if not focused_nation_id.is_empty():
-				_zoom_to_nation(focused_nation_id)
-			else:
-				_zoom_to_world()
-		ZoomLevel.NATION:
-			if not focused_region_id.is_empty():
-				_zoom_to_region(focused_region_id)
-			else:
-				_zoom_to_world()
-		ZoomLevel.REGION:
-			_zoom_to_world()
-		ZoomLevel.WORLD:
-			pass  # Bereits auf höchster Ebene
-
-# === ANIMATION ===
-
-func _process(delta: float) -> void:
-	# Smooth zoom/pan animation
-	position = position.lerp(target_position, delta * zoom_animation_speed)
-	scale = scale.lerp(Vector2(target_scale, target_scale), delta * zoom_animation_speed)
-
-# === INPUT HANDLING ===
+# === INPUT ===
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_handle_mouse_click(event.position)
-		# Rechtsklick zum Rauszoomen
-		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			zoom_out()
-
 	elif event is InputEventMouseMotion:
 		_handle_mouse_hover(event.position)
 
 func _handle_mouse_click(click_pos: Vector2) -> void:
-	"""Behandelt Klicks basierend auf Zoom-Level."""
+	"""Klick-Behandlung."""
 	var territory = _get_territory_at_position(click_pos)
 
 	if territory.is_empty():
@@ -394,79 +282,62 @@ func _handle_mouse_click(click_pos: Vector2) -> void:
 	selected_territory = territory
 	territory_clicked.emit(territory.type, territory.id)
 
-	# Hierarchisches Zoomen
-	match current_zoom_level:
-		ZoomLevel.WORLD:
-			if territory.type == "region":
-				_zoom_to_region(territory.id)
-		ZoomLevel.REGION:
-			if territory.type == "nation":
-				var nation = GameState.nations.get(territory.id)
-				if nation and nation.region_id == focused_region_id:
-					_zoom_to_nation(territory.id)
-		ZoomLevel.NATION:
-			if territory.type == "province":
-				var province = GameState.provinces.get(territory.id)
-				if province and province.nation_id == focused_nation_id:
-					_zoom_to_province(territory.id)
-					EventBus.province_selected.emit(territory.id)
-		ZoomLevel.PROVINCE:
-			if territory.type == "district":
-				# Distrikt-Auswahl (noch keine weitere Zoom-Stufe)
-				print("MapController: Distrikt ausgewählt: %s" % territory.id)
+	print("MapController: Territorium geklickt: %s (%s)" % [territory.id, territory.type])
 
 func _handle_mouse_hover(mouse_pos: Vector2) -> void:
-	"""Behandelt Mouse-Hover."""
+	"""Hover-Behandlung."""
 	var territory = _get_territory_at_position(mouse_pos)
 
 	if territory != hovered_territory:
 		hovered_territory = territory
 		queue_redraw()
 
-func _get_territory_at_position(pos: Vector2) -> Dictionary:
-	"""Findet Territorium an Position basierend auf aktuellem Zoom-Level."""
-	var local_pos = to_local(pos)
+func _get_territory_at_position(screen_pos: Vector2) -> Dictionary:
+	"""Findet Territorium an Position."""
+	var world_pos = _screen_to_world(screen_pos)
 
-	match current_zoom_level:
-		ZoomLevel.WORLD:
-			for region_id in region_shapes.keys():
-				var polygon = region_shapes[region_id]
-				if _point_in_polygon(local_pos, polygon.polygon):
-					return {"type": "region", "id": region_id}
-		ZoomLevel.REGION:
-			for nation_id in nation_shapes.keys():
-				var nation = GameState.nations.get(nation_id)
-				if nation and nation.region_id == focused_region_id:
-					var polygon = nation_shapes[nation_id]
-					if _point_in_polygon(local_pos, polygon.polygon):
-						return {"type": "nation", "id": nation_id}
-		ZoomLevel.NATION:
-			for province_id in province_shapes.keys():
-				var province = GameState.provinces.get(province_id)
-				if province and province.nation_id == focused_nation_id:
-					var polygon = province_shapes[province_id]
-					if _point_in_polygon(local_pos, polygon.polygon):
-						return {"type": "province", "id": province_id}
-		ZoomLevel.PROVINCE:
-			for district_id in district_shapes.keys():
-				var district = GameState.districts.get(district_id)
-				if district and district.province_id == focused_province_id:
-					var polygon = district_shapes[district_id]
-					if _point_in_polygon(local_pos, polygon.polygon):
-						return {"type": "district", "id": district_id}
+	if district_layer.visible:
+		for district_id in district_shapes.keys():
+			if _point_in_polygon(world_pos, district_shapes[district_id].polygon):
+				return {"type": "district", "id": district_id}
+
+	if province_layer.visible:
+		for province_id in province_shapes.keys():
+			if _point_in_polygon(world_pos, province_shapes[province_id].polygon):
+				return {"type": "province", "id": province_id}
+
+	if nation_layer.visible:
+		for nation_id in nation_shapes.keys():
+			if _point_in_polygon(world_pos, nation_shapes[nation_id].polygon):
+				return {"type": "nation", "id": nation_id}
+
+	if region_layer.visible:
+		for region_id in region_shapes.keys():
+			if _point_in_polygon(world_pos, region_shapes[region_id].polygon):
+				return {"type": "region", "id": region_id}
 
 	return {}
 
 func _point_in_polygon(point: Vector2, polygon: PackedVector2Array) -> bool:
-	"""Prüft ob Punkt in Polygon liegt."""
+	"""Punkt-in-Polygon-Test."""
 	if polygon.size() < 3:
 		return false
 	return Geometry2D.is_point_in_polygon(point, polygon)
 
-# === VISUAL FEEDBACK ===
+# === COORDINATE CONVERSION ===
+
+func _screen_to_world(screen_pos: Vector2) -> Vector2:
+	"""Screen → World."""
+	return (screen_pos - position) / scale.x
+
+func _world_to_screen(world_pos: Vector2) -> Vector2:
+	"""World → Screen."""
+	return world_pos * scale.x + position
+
+# === VISUAL ===
 
 func _draw() -> void:
-	"""Zeichnet Highlights für gehöverte/selektierte Territorien."""
+	"""Zeichnet Highlights."""
 	if not hovered_territory.is_empty():
 		_draw_territory_highlight(hovered_territory, Color(1.0, 1.0, 1.0, 0.3))
 
@@ -474,18 +345,14 @@ func _draw() -> void:
 		_draw_territory_highlight(selected_territory, Color(1.0, 1.0, 0.0, 0.5))
 
 func _draw_territory_highlight(territory: Dictionary, color: Color) -> void:
-	"""Zeichnet Highlight über Territorium."""
+	"""Zeichnet Highlight."""
 	var polygon: Polygon2D = null
 
 	match territory.type:
-		"region":
-			polygon = region_shapes.get(territory.id)
-		"nation":
-			polygon = nation_shapes.get(territory.id)
-		"province":
-			polygon = province_shapes.get(territory.id)
-		"district":
-			polygon = district_shapes.get(territory.id)
+		"region": polygon = region_shapes.get(territory.id)
+		"nation": polygon = nation_shapes.get(territory.id)
+		"province": polygon = province_shapes.get(territory.id)
+		"district": polygon = district_shapes.get(territory.id)
 
 	if polygon and polygon.polygon.size() > 0:
 		draw_colored_polygon(polygon.polygon, color)
@@ -499,7 +366,7 @@ func _on_province_selected(province_id: String) -> void:
 # === HELPERS ===
 
 func _get_polygon_center(polygon: PackedVector2Array) -> Vector2:
-	"""Berechnet Zentrum eines Polygons."""
+	"""Berechnet Polygon-Zentrum."""
 	if polygon.size() == 0:
 		return Vector2.ZERO
 
@@ -507,3 +374,36 @@ func _get_polygon_center(polygon: PackedVector2Array) -> Vector2:
 	for point in polygon:
 		sum += point
 	return sum / polygon.size()
+
+# === GEO CONVERSION ===
+
+func pixel_to_geo(pixel_pos: Vector2) -> Vector2:
+	"""Pixel → Geo."""
+	var lon = GEO_LON_MIN + (pixel_pos.x / MAP_WIDTH) * (GEO_LON_MAX - GEO_LON_MIN)
+	var lat = GEO_LAT_MAX - (pixel_pos.y / MAP_HEIGHT) * (GEO_LAT_MAX - GEO_LAT_MIN)
+	return Vector2(lon, lat)
+
+func geo_to_pixel(geo_pos: Vector2) -> Vector2:
+	"""Geo → Pixel."""
+	var x = (geo_pos.x - GEO_LON_MIN) / (GEO_LON_MAX - GEO_LON_MIN) * MAP_WIDTH
+	var y = (GEO_LAT_MAX - geo_pos.y) / (GEO_LAT_MAX - GEO_LAT_MIN) * MAP_HEIGHT
+	return Vector2(x, y)
+
+func calculate_distance_km(pixel_pos1: Vector2, pixel_pos2: Vector2) -> float:
+	"""Entfernung in km."""
+	return pixel_pos1.distance_to(pixel_pos2) * KM_PER_PIXEL
+
+func calculate_area_km2(polygon: PackedVector2Array) -> float:
+	"""Fläche in km²."""
+	if polygon.size() < 3:
+		return 0.0
+
+	var area_pixels = 0.0
+	var n = polygon.size()
+	for i in range(n):
+		var j = (i + 1) % n
+		area_pixels += polygon[i].x * polygon[j].y
+		area_pixels -= polygon[j].x * polygon[i].y
+
+	area_pixels = abs(area_pixels) / 2.0
+	return area_pixels * (KM_PER_PIXEL * KM_PER_PIXEL)
