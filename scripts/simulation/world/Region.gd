@@ -11,6 +11,7 @@ var name: String = ""
 var nations: Array[String] = []  # Nation IDs in dieser Region
 var color: Color = Color.WHITE  # Farbe für politische Karte
 var center_position: Vector2 = Vector2.ZERO  # Zentrum der Region
+var area_km2: float = 0.0  # Fläche in Quadratkilometern
 
 # === VISUELLE DARSTELLUNG ===
 var boundary_polygon: PackedVector2Array = PackedVector2Array()  # Außengrenzen der Region

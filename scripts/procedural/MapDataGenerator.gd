@@ -9,8 +9,8 @@ extends RefCounted
 ## Zoomstufe 4: Provinzen
 ## Zoomstufe 5: Distrikte/Städte
 
-const MAP_WIDTH = 2000.0  # Pixel-Breite der Weltkarte
-const MAP_HEIGHT = 1200.0  # Pixel-Höhe der Weltkarte
+# MapScale für Koordinaten und Flächen-Berechnungen
+static var map_scale: MapScale
 
 const REGIONS_TEMPLATE = "res://data/templates/maps/regions.json"
 const NATIONS_TEMPLATE = "res://data/templates/maps/nations.json"
@@ -29,6 +29,14 @@ static func generate_full_map() -> Dictionary:
 	Returns: {regions: Array[Region], nations: Array[Nation], provinces: Array[Province], districts: Array[District]}
 	"""
 	print("MapDataGenerator: Lade Templates und generiere Weltkarte...")
+
+	# Lade MapScale
+	if not map_scale:
+		map_scale = load("res://data/map_scales/default_map_scale.tres") as MapScale
+		if not map_scale:
+			map_scale = MapScale.new()
+		print("MapDataGenerator: MapScale geladen")
+		print(map_scale.get_info_string())
 
 	# Lade Template-Daten beim ersten Aufruf
 	if _terrain_data.is_empty():
@@ -150,6 +158,9 @@ static func _load_and_generate_regions() -> Array[Region]:
 			region_data.id.hash()  # Seed basierend auf ID für Konsistenz
 		)
 
+		# Berechne Fläche in km²
+		region.area_km2 = map_scale.calculate_polygon_area_km2_from_pixels(region.boundary_polygon)
+
 		regions.append(region)
 
 	print("MapDataGenerator: %d Regionen aus Template geladen" % regions.size())
@@ -251,6 +262,9 @@ static func _generate_nations_for_region(region: Region, nation_templates: Array
 		# Verwende generiertes Voronoi-Polygon
 		nation.boundary_polygon = polygon
 
+		# Berechne Fläche in km²
+		nation.area_km2 = map_scale.calculate_polygon_area_km2_from_pixels(nation.boundary_polygon)
+
 		nations.append(nation)
 
 	print("MapDataGenerator: %d Nationen für Region %s generiert" % [nations.size(), region.name])
@@ -298,6 +312,9 @@ static func _generate_provinces_for_nation(nation: Nation) -> Array[Province]:
 
 		# Ressourcen basierend auf Terrain
 		_assign_province_resources(province)
+
+		# Berechne Fläche in km²
+		province.area_km2 = map_scale.calculate_polygon_area_km2_from_pixels(province.boundary_polygon)
 
 		provinces.append(province)
 
@@ -385,6 +402,13 @@ static func _generate_districts_for_province(province: Province) -> Array[Distri
 		district.has_university = district.is_urban and randf() > 0.5
 		district.has_major_factory = randf() > 0.7
 		district.has_military_base = randf() > 0.8
+
+		# Berechne Fläche in km²
+		district.area_km2 = map_scale.calculate_polygon_area_km2_from_pixels(district.boundary_polygon)
+
+		# Aktualisiere Dichte basierend auf tatsächlicher Fläche
+		if district.area_km2 > 0.0:
+			district.density = district.population / district.area_km2
 
 		districts.append(district)
 

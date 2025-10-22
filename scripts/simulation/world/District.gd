@@ -11,6 +11,7 @@ var province_id: String = ""
 # === GEOGRAPHIE ===
 var position: Vector2 = Vector2.ZERO
 var boundary_polygon: PackedVector2Array = PackedVector2Array()
+var area_km2: float = 0.0  # Fläche in Quadratkilometern
 var is_urban: bool = false  # Großstadt vs. Landkreis
 
 # === DEMOGRAPHIE ===

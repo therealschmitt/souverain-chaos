@@ -2,33 +2,40 @@ extends Node2D
 
 signal territory_clicked(territory_type: String, territory_id: String)
 
-# === COORDINATE SYSTEM & METRICS ===
-const MAP_WIDTH = 2000.0
-const MAP_HEIGHT = 1200.0
-const PIXELS_PER_KM = 0.5
-const KM_PER_PIXEL = 2.0
+# === MAP SCALE RESOURCE ===
+@export var map_scale_resource: MapScale
+var map_scale: MapScale
 
-# Geografisches Koordinatensystem
-const GEO_LON_MIN = -180.0
-const GEO_LON_MAX = 180.0
-const GEO_LAT_MIN = -90.0
-const GEO_LAT_MAX = 90.0
+# === DEBUG ===
+@export var show_debug_ui: bool = true  # Toggle für Debug-UI
+var debug_ui: Control
+
+# === POLYGON RENDERER ===
+var polygon_renderer: PolygonRenderer
+
+# === INTERACTION LAYER ===
+var interaction_layer: MapInteractionLayer
+
+# === ZOOM SYSTEM ===
+var zoom_controller: MapZoomController
+var zoom_level_manager: ZoomLevelManager
+var label_manager: MapLabelManager
+
+# === PANNING SYSTEM ===
+var panning_controller: MapPanningController
 
 # === MAP LAYERS ===
-var region_layer: Node2D
 var nation_layer: Node2D
 var province_layer: Node2D
 var district_layer: Node2D
 var label_layer: Node2D
 
 # === TERRITORY SHAPES ===
-var region_shapes: Dictionary = {}
 var nation_shapes: Dictionary = {}
 var province_shapes: Dictionary = {}
 var district_shapes: Dictionary = {}
 
 # === TERRITORY LABELS ===
-var region_labels: Dictionary = {}
 var nation_labels: Dictionary = {}
 var province_labels: Dictionary = {}
 var district_labels: Dictionary = {}
@@ -38,9 +45,36 @@ var hovered_territory: Dictionary = {}
 var selected_territory: Dictionary = {}
 
 func _ready() -> void:
+	_initialize_polygon_renderer()
+	_initialize_map_scale()
 	_setup_layers()
+	_initialize_zoom_system()
+	_initialize_panning_system()
+	_initialize_interaction_layer()
+	_initialize_debug_ui()
 	_connect_signals()
 	call_deferred("_delayed_load")
+
+func _initialize_polygon_renderer() -> void:
+	"""Initialisiert das Polygon-Renderer-System."""
+	polygon_renderer = PolygonRenderer.new()
+	polygon_renderer.print_render_config()
+	print("MapController: PolygonRenderer initialized")
+
+func _initialize_map_scale() -> void:
+	"""Initializes map scale from resource or creates default."""
+	if map_scale_resource:
+		map_scale = map_scale_resource
+	else:
+		# Load default map scale
+		map_scale = load("res://data/map_scales/default_map_scale.tres") as MapScale
+		if not map_scale:
+			# Fallback: create default in code
+			map_scale = MapScale.new()
+			print("MapController: Using fallback MapScale")
+
+	print("MapController: Map Scale loaded")
+	print(map_scale.get_info_string())
 
 func _delayed_load() -> void:
 	"""Lädt die Karte verzögert."""
@@ -55,10 +89,6 @@ func _delayed_load() -> void:
 
 func _setup_layers() -> void:
 	"""Erstellt Map-Layer als Node2D-Hierarchie."""
-	region_layer = Node2D.new()
-	region_layer.name = "RegionLayer"
-	add_child(region_layer)
-
 	nation_layer = Node2D.new()
 	nation_layer.name = "NationLayer"
 	add_child(nation_layer)
@@ -75,15 +105,80 @@ func _setup_layers() -> void:
 	label_layer.name = "LabelLayer"
 	add_child(label_layer)
 
+func _initialize_zoom_system() -> void:
+	"""Initialisiert das Zoom-System (Controller, LOD-Manager, Label-Manager)."""
+	# Zoom Controller
+	zoom_controller = MapZoomController.new()
+	zoom_controller.name = "ZoomController"
+	add_child(zoom_controller)
+
+	# Zoom Level Manager
+	zoom_level_manager = ZoomLevelManager.new()
+	zoom_level_manager.name = "ZoomLevelManager"
+	add_child(zoom_level_manager)
+
+	# Label Manager
+	label_manager = MapLabelManager.new()
+	label_manager.name = "LabelManager"
+	add_child(label_manager)
+
+	print("MapController: Zoom-System initialisiert")
+
+func _initialize_panning_system() -> void:
+	"""Initialisiert das Panning-System."""
+	panning_controller = MapPanningController.new()
+	panning_controller.name = "PanningController"
+	add_child(panning_controller)
+	print("MapController: Panning-System initialisiert")
+
+func _initialize_interaction_layer() -> void:
+	"""Initialisiert die dedizierte Interaktions-Layer."""
+	interaction_layer = MapInteractionLayer.new()
+	interaction_layer.name = "InteractionLayer"
+	add_child(interaction_layer)
+	print("MapController: MapInteractionLayer erstellt")
+
+func _initialize_debug_ui() -> void:
+	"""Initialisiert die Debug-UI (optional)."""
+	if not show_debug_ui:
+		return
+
+	# Lade Debug-UI-Script
+	var MapDebugUI = load("res://scripts/ui/map/MapDebugUI.gd")
+	if MapDebugUI:
+		debug_ui = MapDebugUI.new()
+		debug_ui.name = "MapDebugUI"
+
+		# WICHTIG: Füge Debug-UI zum Root-Node hinzu, nicht zum MapController
+		# Damit bewegt sie sich nicht mit der Karte mit
+		# VERWENDE call_deferred weil Root gerade busy sein könnte
+		var root = get_tree().root
+		if root:
+			root.call_deferred("add_child", debug_ui)
+			print("MapController: Debug-UI erstellt (als Top-Level, deferred)")
+		else:
+			push_warning("MapController: Konnte Root-Node nicht finden")
+	else:
+		push_warning("MapController: MapDebugUI.gd nicht gefunden")
+
 func _connect_signals() -> void:
 	EventBus.province_selected.connect(_on_province_selected)
+	EventBus.territory_clicked.connect(_on_territory_clicked)
+	EventBus.territory_hovered.connect(_on_territory_hovered)
+	EventBus.territory_selected.connect(_on_territory_selected)
+
+	# Zoom Signals
+	EventBus.map_zoom_changed.connect(_on_zoom_changed)
+	EventBus.map_zoom_completed.connect(_on_zoom_completed)
+	EventBus.map_zoom_level_changed.connect(_on_zoom_level_changed)
+
+	# Panning Signals
+	EventBus.map_panning_started.connect(_on_panning_started)
+	EventBus.map_panning_stopped.connect(_on_panning_stopped)
 
 func _load_map_data() -> void:
 	"""Lädt alle Kartendaten."""
 	print("MapController: Lade Kartendaten...")
-
-	for region_id in GameState.regions.keys():
-		_create_region_polygon(GameState.regions[region_id])
 
 	for nation_id in GameState.nations.keys():
 		_create_nation_polygon(GameState.nations[nation_id])
@@ -94,20 +189,16 @@ func _load_map_data() -> void:
 	for district_id in GameState.districts.keys():
 		_create_district_polygon(GameState.districts[district_id])
 
-	print("MapController: %d Regionen, %d Nationen, %d Provinzen, %d Distrikte geladen" % [
-		region_shapes.size(), nation_shapes.size(), province_shapes.size(), district_shapes.size()
+	print("MapController: %d Nationen, %d Provinzen, %d Distrikte geladen (3-Layer-Hierarchie)" % [
+		nation_shapes.size(), province_shapes.size(), district_shapes.size()
 	])
 
 	# Alle Layer sichtbar (statisch)
-	region_layer.visible = true
 	nation_layer.visible = true
 	province_layer.visible = true
 	district_layer.visible = false  # Distrikte standardmäßig aus
 
 	# Alle Labels sichtbar
-	for label in region_labels.values():
-		if label:
-			label.visible = true
 	for label in nation_labels.values():
 		if label:
 			label.visible = true
@@ -115,64 +206,57 @@ func _load_map_data() -> void:
 		if label:
 			label.visible = true
 
+	# Initialisiere Interaktions-Layer mit Map-Daten
+	if interaction_layer:
+		interaction_layer.initialize(self, polygon_renderer)
+
+	# Initialisiere Zoom-System mit Map-Daten
+	if zoom_controller:
+		zoom_controller.initialize(self)
+
+	if zoom_level_manager:
+		zoom_level_manager.initialize(nation_layer, province_layer, district_layer)
+
+	if label_manager:
+		label_manager.initialize(self, zoom_level_manager, nation_labels, province_labels, district_labels)
+
+	# Initialisiere Panning-System mit Map-Daten
+	if panning_controller:
+		var map_size = Vector2(map_scale.map_width_pixels, map_scale.map_height_pixels)
+		panning_controller.initialize(self, map_size)
+
+	# Initialisiere Debug-UI (falls aktiviert)
+	if debug_ui:
+		debug_ui.initialize(self)
+
 func _center_map() -> void:
 	"""Zentriert Karte im Viewport."""
 	var viewport_size = get_viewport_rect().size
 	position = Vector2(
-		(viewport_size.x - MAP_WIDTH) / 2.0,
-		(viewport_size.y - MAP_HEIGHT) / 2.0
+		(viewport_size.x - map_scale.map_width_pixels) / 2.0,
+		(viewport_size.y - map_scale.map_height_pixels) / 2.0
 	)
 	scale = Vector2(1.0, 1.0)
 
 # === POLYGON CREATION ===
 
-func _create_region_polygon(region) -> void:
-	if region.boundary_polygon.size() < 3:
-		return
-
-	var polygon = Polygon2D.new()
-	polygon.name = "Region_" + region.id
-	polygon.polygon = region.boundary_polygon
-	polygon.color = region.color
-	polygon.antialiased = true
-	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-
-	var line = Line2D.new()
-	line.points = region.boundary_polygon
-	line.add_point(region.boundary_polygon[0])
-	line.default_color = Color(0.0, 0.0, 0.0, 1.0)
-	line.width = 4.0
-	line.antialiased = true
-	polygon.add_child(line)
-
-	polygon.set_meta("territory_type", "region")
-	polygon.set_meta("territory_id", region.id)
-
-	region_layer.add_child(polygon)
-	region_shapes[region.id] = polygon
-
-	var label = _create_territory_label(region.name, region.boundary_polygon, 24)
-	region_labels[region.id] = label
-
 func _create_nation_polygon(nation) -> void:
-	if nation.boundary_polygon.size() < 3:
+	if not polygon_renderer.validate_polygon(nation.boundary_polygon):
+		print("MapController: Nation %s has invalid polygon, skipping" % nation.id)
 		return
 
 	var polygon = Polygon2D.new()
 	polygon.name = "Nation_" + nation.id
 	polygon.polygon = nation.boundary_polygon
-	polygon.color = nation.color
-	polygon.antialiased = true
-	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	var line = Line2D.new()
-	line.points = nation.boundary_polygon
-	line.add_point(nation.boundary_polygon[0])
-	line.default_color = Color(0.0, 0.0, 0.0, 1.0)
-	line.width = 3.0
-	line.antialiased = true
+	# Wende Render-Konfiguration an
+	polygon_renderer.apply_fill_color(polygon, "nation", nation.color)
+
+	# Erstelle Grenzlinie mit Hierarchie-spezifischen Einstellungen
+	var line = polygon_renderer.create_boundary_line(nation.boundary_polygon, "nation")
 	polygon.add_child(line)
 
+	# Metadaten für Interaktion
 	polygon.set_meta("territory_type", "nation")
 	polygon.set_meta("territory_id", nation.id)
 
@@ -183,24 +267,22 @@ func _create_nation_polygon(nation) -> void:
 	nation_labels[nation.id] = label
 
 func _create_province_polygon(province) -> void:
-	if province.boundary_polygon.size() < 3:
+	if not polygon_renderer.validate_polygon(province.boundary_polygon):
+		print("MapController: Province %s has invalid polygon, skipping" % province.id)
 		return
 
 	var polygon = Polygon2D.new()
 	polygon.name = "Province_" + province.id
 	polygon.polygon = province.boundary_polygon
-	polygon.color = province.color
-	polygon.antialiased = true
-	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	var line = Line2D.new()
-	line.points = province.boundary_polygon
-	line.add_point(province.boundary_polygon[0])
-	line.default_color = Color(0.2, 0.2, 0.2, 0.8)
-	line.width = 2.0
-	line.antialiased = true
+	# Wende Render-Konfiguration an
+	polygon_renderer.apply_fill_color(polygon, "province", province.color)
+
+	# Erstelle Grenzlinie mit Hierarchie-spezifischen Einstellungen
+	var line = polygon_renderer.create_boundary_line(province.boundary_polygon, "province")
 	polygon.add_child(line)
 
+	# Metadaten für Interaktion
 	polygon.set_meta("territory_type", "province")
 	polygon.set_meta("territory_id", province.id)
 
@@ -211,24 +293,23 @@ func _create_province_polygon(province) -> void:
 	province_labels[province.id] = label
 
 func _create_district_polygon(district) -> void:
-	if district.boundary_polygon.size() < 3:
+	if not polygon_renderer.validate_polygon(district.boundary_polygon):
+		print("MapController: District %s has invalid polygon, skipping" % district.id)
 		return
 
 	var polygon = Polygon2D.new()
 	polygon.name = "District_" + district.id
 	polygon.polygon = district.boundary_polygon
-	polygon.color = district.color.darkened(0.05)
-	polygon.antialiased = true
-	polygon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	var line = Line2D.new()
-	line.points = district.boundary_polygon
-	line.add_point(district.boundary_polygon[0])
-	line.default_color = Color(0.3, 0.3, 0.3, 0.5)
-	line.width = 1.0
-	line.antialiased = true
+	# Wende Render-Konfiguration an (mit leichter Abdunklung für Districts)
+	var darkened_color = district.color.darkened(0.05)
+	polygon_renderer.apply_fill_color(polygon, "district", darkened_color)
+
+	# Erstelle Grenzlinie mit Hierarchie-spezifischen Einstellungen
+	var line = polygon_renderer.create_boundary_line(district.boundary_polygon, "district")
 	polygon.add_child(line)
 
+	# Metadaten für Interaktion
 	polygon.set_meta("territory_type", "district")
 	polygon.set_meta("territory_id", district.id)
 
@@ -263,105 +344,97 @@ func _create_territory_label(territory_name: String, polygon: PackedVector2Array
 
 	return label
 
-# === INPUT ===
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_handle_mouse_click(event.position)
-	elif event is InputEventMouseMotion:
-		_handle_mouse_hover(event.position)
-
-func _handle_mouse_click(click_pos: Vector2) -> void:
-	"""Klick-Behandlung."""
-	var territory = _get_territory_at_position(click_pos)
-
-	if territory.is_empty():
-		return
-
-	selected_territory = territory
-	territory_clicked.emit(territory.type, territory.id)
-
-	print("MapController: Territorium geklickt: %s (%s)" % [territory.id, territory.type])
-
-func _handle_mouse_hover(mouse_pos: Vector2) -> void:
-	"""Hover-Behandlung."""
-	var territory = _get_territory_at_position(mouse_pos)
-
-	if territory != hovered_territory:
-		hovered_territory = territory
-		queue_redraw()
-
-func _get_territory_at_position(screen_pos: Vector2) -> Dictionary:
-	"""Findet Territorium an Position."""
-	var world_pos = _screen_to_world(screen_pos)
-
-	if district_layer.visible:
-		for district_id in district_shapes.keys():
-			if _point_in_polygon(world_pos, district_shapes[district_id].polygon):
-				return {"type": "district", "id": district_id}
-
-	if province_layer.visible:
-		for province_id in province_shapes.keys():
-			if _point_in_polygon(world_pos, province_shapes[province_id].polygon):
-				return {"type": "province", "id": province_id}
-
-	if nation_layer.visible:
-		for nation_id in nation_shapes.keys():
-			if _point_in_polygon(world_pos, nation_shapes[nation_id].polygon):
-				return {"type": "nation", "id": nation_id}
-
-	if region_layer.visible:
-		for region_id in region_shapes.keys():
-			if _point_in_polygon(world_pos, region_shapes[region_id].polygon):
-				return {"type": "region", "id": region_id}
-
-	return {}
-
-func _point_in_polygon(point: Vector2, polygon: PackedVector2Array) -> bool:
-	"""Punkt-in-Polygon-Test."""
-	if polygon.size() < 3:
-		return false
-	return Geometry2D.is_point_in_polygon(point, polygon)
+# === INPUT (jetzt durch MapInteractionLayer gehandhabt) ===
+# Die alte _input-Logik wurde in MapInteractionLayer verschoben
 
 # === COORDINATE CONVERSION ===
 
-func _screen_to_world(screen_pos: Vector2) -> Vector2:
-	"""Screen → World."""
+func _screen_to_map_pixel(screen_pos: Vector2) -> Vector2:
+	"""
+	Screen → Map Pixel coordinates.
+	Accounts for map position and scale in viewport.
+	"""
 	return (screen_pos - position) / scale.x
 
+func _map_pixel_to_screen(map_pixel_pos: Vector2) -> Vector2:
+	"""
+	Map Pixel → Screen coordinates.
+	Accounts for map position and scale in viewport.
+	"""
+	return map_pixel_pos * scale.x + position
+
+func _screen_to_world(screen_pos: Vector2) -> Vector2:
+	"""
+	Screen → World coordinates (km).
+	Complete conversion chain: Screen → MapPixel → World
+	"""
+	var map_pixel = _screen_to_map_pixel(screen_pos)
+	return map_scale.pixel_to_world(map_pixel)
+
 func _world_to_screen(world_pos: Vector2) -> Vector2:
-	"""World → Screen."""
-	return world_pos * scale.x + position
+	"""
+	World coordinates (km) → Screen.
+	Complete conversion chain: World → MapPixel → Screen
+	"""
+	var map_pixel = map_scale.world_to_pixel(world_pos)
+	return _map_pixel_to_screen(map_pixel)
 
-# === VISUAL ===
-
-func _draw() -> void:
-	"""Zeichnet Highlights."""
-	if not hovered_territory.is_empty():
-		_draw_territory_highlight(hovered_territory, Color(1.0, 1.0, 1.0, 0.3))
-
-	if not selected_territory.is_empty() and selected_territory != hovered_territory:
-		_draw_territory_highlight(selected_territory, Color(1.0, 1.0, 0.0, 0.5))
-
-func _draw_territory_highlight(territory: Dictionary, color: Color) -> void:
-	"""Zeichnet Highlight."""
-	var polygon: Polygon2D = null
-
-	match territory.type:
-		"region": polygon = region_shapes.get(territory.id)
-		"nation": polygon = nation_shapes.get(territory.id)
-		"province": polygon = province_shapes.get(territory.id)
-		"district": polygon = district_shapes.get(territory.id)
-
-	if polygon and polygon.polygon.size() > 0:
-		draw_colored_polygon(polygon.polygon, color)
+# === VISUAL (jetzt durch MapInteractionLayer gehandhabt) ===
+# Highlights werden jetzt in MapInteractionLayer mit Line2D gezeichnet
 
 # === EVENT HANDLERS ===
 
 func _on_province_selected(province_id: String) -> void:
-	selected_territory = {"type": "province", "id": province_id}
-	queue_redraw()
+	"""Handler für altes province_selected Signal (Kompatibilität)."""
+	EventBus.territory_selected.emit("province", province_id)
+
+func _on_territory_clicked(territory_type: String, territory_id: String) -> void:
+	"""Handler für territory_clicked Signal."""
+	# Emit eigenes legacy Signal für Kompatibilität
+	territory_clicked.emit(territory_type, territory_id)
+
+	# Update selected_territory für Kompatibilität
+	selected_territory = {"type": territory_type, "id": territory_id}
+
+	print("MapController: Territorium geklickt: %s [%s]" % [territory_id, territory_type])
+
+func _on_territory_hovered(territory_type: String, territory_id: String) -> void:
+	"""Handler für territory_hovered Signal."""
+	hovered_territory = {"type": territory_type, "id": territory_id}
+
+func _on_territory_selected(territory_type: String, territory_id: String) -> void:
+	"""Handler für territory_selected Signal."""
+	selected_territory = {"type": territory_type, "id": territory_id}
+
+func _on_zoom_changed(current_zoom: float, target_zoom: float) -> void:
+	"""Handler für map_zoom_changed Signal."""
+	# Update LOD-Manager
+	if zoom_level_manager:
+		zoom_level_manager.update_zoom(current_zoom)
+
+	# Update Label-Manager
+	if label_manager:
+		label_manager.update_labels(current_zoom)
+
+	# Update Panning-Bounds
+	if panning_controller:
+		panning_controller.update_bounds_for_zoom(current_zoom)
+
+func _on_zoom_completed(final_zoom: float) -> void:
+	"""Handler für map_zoom_completed Signal."""
+	print("MapController: Zoom abgeschlossen bei %.2f" % final_zoom)
+
+func _on_zoom_level_changed(new_level: int, old_level: int) -> void:
+	"""Handler für map_zoom_level_changed Signal."""
+	print("MapController: LOD-Wechsel: %d → %d" % [old_level, new_level])
+
+func _on_panning_started() -> void:
+	"""Handler für map_panning_started Signal."""
+	pass  # Kann für UI-Feedback genutzt werden
+
+func _on_panning_stopped() -> void:
+	"""Handler für map_panning_stopped Signal."""
+	pass  # Kann für UI-Feedback genutzt werden
 
 # === HELPERS ===
 
@@ -375,35 +448,144 @@ func _get_polygon_center(polygon: PackedVector2Array) -> Vector2:
 		sum += point
 	return sum / polygon.size()
 
-# === GEO CONVERSION ===
+# === PUBLIC UTILITY FUNCTIONS ===
 
-func pixel_to_geo(pixel_pos: Vector2) -> Vector2:
-	"""Pixel → Geo."""
-	var lon = GEO_LON_MIN + (pixel_pos.x / MAP_WIDTH) * (GEO_LON_MAX - GEO_LON_MIN)
-	var lat = GEO_LAT_MAX - (pixel_pos.y / MAP_HEIGHT) * (GEO_LAT_MAX - GEO_LAT_MIN)
-	return Vector2(lon, lat)
+func calculate_distance_km(world_pos1: Vector2, world_pos2: Vector2) -> float:
+	"""
+	Calculates distance in km between two world coordinates.
+	@param world_pos1: First position in world coordinates (km)
+	@param world_pos2: Second position in world coordinates (km)
+	@return: Distance in kilometers
+	"""
+	return map_scale.calculate_distance_km(world_pos1, world_pos2)
 
-func geo_to_pixel(geo_pos: Vector2) -> Vector2:
-	"""Geo → Pixel."""
-	var x = (geo_pos.x - GEO_LON_MIN) / (GEO_LON_MAX - GEO_LON_MIN) * MAP_WIDTH
-	var y = (GEO_LAT_MAX - geo_pos.y) / (GEO_LAT_MAX - GEO_LAT_MIN) * MAP_HEIGHT
-	return Vector2(x, y)
+func calculate_distance_km_from_pixels(pixel_pos1: Vector2, pixel_pos2: Vector2) -> float:
+	"""
+	Calculates distance in km between two pixel coordinates.
+	@param pixel_pos1: First position in pixel coordinates
+	@param pixel_pos2: Second position in pixel coordinates
+	@return: Distance in kilometers
+	"""
+	return map_scale.calculate_distance_km_from_pixels(pixel_pos1, pixel_pos2)
 
-func calculate_distance_km(pixel_pos1: Vector2, pixel_pos2: Vector2) -> float:
-	"""Entfernung in km."""
-	return pixel_pos1.distance_to(pixel_pos2) * KM_PER_PIXEL
+func calculate_area_km2(world_polygon: PackedVector2Array) -> float:
+	"""
+	Calculates area in km² for a polygon in world coordinates.
+	@param world_polygon: Polygon vertices in world coordinates (km)
+	@return: Area in square kilometers
+	"""
+	return map_scale.calculate_polygon_area_km2(world_polygon)
 
-func calculate_area_km2(polygon: PackedVector2Array) -> float:
-	"""Fläche in km²."""
-	if polygon.size() < 3:
-		return 0.0
+func calculate_area_km2_from_pixels(pixel_polygon: PackedVector2Array) -> float:
+	"""
+	Calculates area in km² for a polygon in pixel coordinates.
+	@param pixel_polygon: Polygon vertices in pixel coordinates
+	@return: Area in square kilometers
+	"""
+	return map_scale.calculate_polygon_area_km2_from_pixels(pixel_polygon)
 
-	var area_pixels = 0.0
-	var n = polygon.size()
-	for i in range(n):
-		var j = (i + 1) % n
-		area_pixels += polygon[i].x * polygon[j].y
-		area_pixels -= polygon[j].x * polygon[i].y
+func pixel_to_world(pixel_pos: Vector2) -> Vector2:
+	"""Converts pixel coordinates to world coordinates (km)."""
+	return map_scale.pixel_to_world(pixel_pos)
 
-	area_pixels = abs(area_pixels) / 2.0
-	return area_pixels * (KM_PER_PIXEL * KM_PER_PIXEL)
+func world_to_pixel(world_pos: Vector2) -> Vector2:
+	"""Converts world coordinates (km) to pixel coordinates."""
+	return map_scale.world_to_pixel(world_pos)
+
+# === ZOOM API ===
+
+func zoom_in(step: float = 0.2) -> void:
+	"""Zoomt hinein."""
+	if zoom_controller:
+		zoom_controller.zoom_in(step)
+
+func zoom_out(step: float = 0.2) -> void:
+	"""Zoomt heraus."""
+	if zoom_controller:
+		zoom_controller.zoom_out(step)
+
+func set_zoom(zoom: float) -> void:
+	"""Setzt Zoom-Level."""
+	if zoom_controller:
+		zoom_controller.set_zoom(zoom)
+
+func reset_zoom() -> void:
+	"""Setzt Zoom auf Standard zurück."""
+	if zoom_controller:
+		zoom_controller.reset_zoom()
+
+func get_current_zoom() -> float:
+	"""Gibt aktuellen Zoom-Level zurück."""
+	if zoom_controller:
+		return zoom_controller.get_current_zoom()
+	return 1.0
+
+func zoom_to_territory(territory_type: String, territory_id: String, zoom_level: float = 2.0) -> void:
+	"""
+	Zoomt zu einem Territorium.
+	@param territory_type: Territorium-Typ
+	@param territory_id: Territorium-ID
+	@param zoom_level: Ziel-Zoom-Level
+	"""
+	var polygon: Polygon2D = null
+
+	match territory_type:
+		"nation": polygon = nation_shapes.get(territory_id)
+		"province": polygon = province_shapes.get(territory_id)
+		"district": polygon = district_shapes.get(territory_id)
+
+	if polygon and zoom_controller:
+		# Berechne Bounds
+		var poly_points = polygon.polygon
+		if poly_points.size() == 0:
+			return
+
+		var min_pos = poly_points[0]
+		var max_pos = poly_points[0]
+
+		for point in poly_points:
+			min_pos.x = min(min_pos.x, point.x)
+			min_pos.y = min(min_pos.y, point.y)
+			max_pos.x = max(max_pos.x, point.x)
+			max_pos.y = max(max_pos.y, point.y)
+
+		# Zoom to fit
+		zoom_controller.zoom_to_fit_bounds(min_pos, max_pos, 50.0)
+
+# === PANNING API ===
+
+func pan_to_position(world_pos: Vector2) -> void:
+	"""
+	Panned zu einer bestimmten Position.
+	@param world_pos: Position in Map-Pixel-Koordinaten
+	"""
+	if panning_controller:
+		panning_controller.pan_to_position(world_pos)
+
+func center_map_view() -> void:
+	"""Zentriert Karte im Viewport."""
+	if panning_controller:
+		panning_controller.center_map()
+
+func get_panning_info() -> Dictionary:
+	"""Gibt Panning-Informationen zurück."""
+	if panning_controller:
+		return panning_controller.get_panning_info()
+	return {}
+
+# === DEBUG API ===
+
+func toggle_debug_ui() -> void:
+	"""Toggle Debug-UI Sichtbarkeit (F3)."""
+	if debug_ui:
+		debug_ui.toggle_visibility()
+
+func show_debug_ui_panel() -> void:
+	"""Zeigt Debug-UI."""
+	if debug_ui:
+		debug_ui.show_debug()
+
+func hide_debug_ui_panel() -> void:
+	"""Versteckt Debug-UI."""
+	if debug_ui:
+		debug_ui.hide_debug()

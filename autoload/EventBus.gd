@@ -34,6 +34,23 @@ signal ui_panel_opened(panel_name: String)
 signal ui_panel_closed(panel_name: String)
 signal province_selected(province_id: String)
 
+# === MAP INTERACTION EVENTS ===
+signal territory_clicked(territory_type: String, territory_id: String)
+signal territory_hovered(territory_type: String, territory_id: String)
+signal territory_unhovered()
+signal territory_selected(territory_type: String, territory_id: String)
+signal territory_deselected()
+
+# === MAP ZOOM EVENTS ===
+signal map_zoom_changed(current_zoom: float, target_zoom: float)
+signal map_zoom_completed(final_zoom: float)
+signal map_zoom_level_changed(new_level: int, old_level: int)
+
+# === MAP PANNING EVENTS ===
+signal map_panning_started()
+signal map_panning_stopped()
+signal map_panned(new_position: Vector2)
+
 # === CHARACTER EVENTS ===
 signal character_created(character: Dictionary)
 signal character_died(character_id: String, cause: String)

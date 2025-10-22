@@ -11,6 +11,7 @@ var region_id: String = ""  # Zu welcher Region gehört diese Nation
 # === VISUALS ===
 var color: Color = Color.WHITE  # Nationale Farbe für politische Karte
 var boundary_polygon: PackedVector2Array = PackedVector2Array()  # Gesamtgrenze der Nation
+var area_km2: float = 0.0  # Fläche in Quadratkilometern
 
 # === GOVERNMENT ===
 var government_type: String = "democracy"  # democracy, dictatorship, theocracy, etc.

@@ -10,6 +10,7 @@ var terrain_type: String = "plains"  # plains, mountains, desert, etc.
 var position: Vector2 = Vector2.ZERO
 var adjacent_provinces: Array[String] = []
 var boundary_polygon: PackedVector2Array = PackedVector2Array()  # Polygon-Grenzen für Karte
+var area_km2: float = 0.0  # Fläche in Quadratkilometern
 
 # === SUBDIVISION ===
 var districts: Array[String] = []  # District IDs innerhalb dieser Provinz
