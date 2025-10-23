@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cq7m5n8p3xsak"]
 
-[ext_resource type="Script" path="res://scripts/ui/SaveLoadMenu.gd" id="1_save_load"]
+[ext_resource type="Script" path="res://scripts/views/ui/dialogs/SaveLoadMenu.gd" id="1_save_load"]
 
 [node name="SaveLoadMenu" type="Panel"]
 anchors_preset = 8

@@ -9,7 +9,10 @@
       "mcp__ide__getDiagnostics",
       "Bash(pwsh -Command \"Get-ChildItem -Path ''C:\\Users\\David\\Documents\\souverän'' -Recurse -Filter ''project.godot'' | Select-Object -ExpandProperty FullName\")",
       "Bash(Get-ChildItem -Path \"C:\\Users\\David\\Documents\\souverän\\data\" -Recurse -File)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\Users\\David\\Documents\\souverän\" -Recurse -Directory)",
+      "Bash(Sort-Object FullName)",
+      "Bash(pwsh -Command:*)"
     ]
   },
   "outputStyle": "default"

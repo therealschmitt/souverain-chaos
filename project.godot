@@ -18,14 +18,14 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-EventBus="*res://autoload/EventBus.gd"
-GameState="*res://autoload/GameState.gd"
-UILayoutManager="*res://scripts/autoload/UILayoutManager.gd"
-TimeManager="*res://autoload/TimeManager.gd"
-HistoricalContext="*res://autoload/HistoricalContext.gd"
-EventManager="*res://autoload/EventManager.gd"
-GameInitializer="*res://autoload/GameInitializer.gd"
-SaveManager="*res://autoload/SaveManager.gd"
+EventBus="*res://scripts/core/EventBus.gd"
+GameState="*res://scripts/core/GameState.gd"
+UILayoutManager="*res://scripts/controllers/ui/UILayoutManager.gd"
+TimeManager="*res://scripts/core/TimeManager.gd"
+HistoricalContext="*res://scripts/core/HistoricalContext.gd"
+EventManager="*res://scripts/core/EventManager.gd"
+GameInitializer="*res://scripts/core/GameInitializer.gd"
+SaveManager="*res://scripts/core/SaveManager.gd"
 
 [dotnet]
 
